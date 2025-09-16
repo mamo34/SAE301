@@ -56,8 +56,6 @@ this.player.setCollideWorldBounds(true);
 this.player.setDataEnabled();
 this.player.setData('invulnerable', false);
 
-//
-
 // Note: ne pas override setActive; cela peut provoquer des états inattendus
 
     // ANIMATIONS (créer une seule fois)
@@ -83,14 +81,48 @@ this.player.setData('invulnerable', false);
 
     // CLAVIER
     this.clavier = this.input.keyboard.createCursorKeys();
+    
+this.input.keyboard.on('keydown', (event) => {
+    if (event.key === 'o') {
+        const reach = 50; // distance max
+        [this.enemy1, this.enemy2].forEach(enemy => {
+            if (enemy && enemy.active) {
+                const dx = enemy.x - this.player.x;
+                const dy = enemy.y - this.player.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                if (dist <= reach) {
+                    enemy.takeDamage(2); // inflige 2 dégâts
+ 
+                    // Texte flottant "Slash!"
+                    let slashText = this.add.text(this.player.x, this.player.y - 50, "Slash!", {
+                        fontSize: "12px",
+                        fill: "#ff0000",
+                        fontFamily: "Arial"
+                    }).setOrigin(0.5).setDepth(10);
+
+                    this.tweens.add({
+                        targets: slashText,
+                        alpha: 0,
+                        y: slashText.y - 30,
+                        duration: 500,
+                        onComplete: () => slashText.destroy()
+                    });
+                }
+            }
+        });
+    }
+});
+
+
 
     // COLLISIONS PLAYER
     this.physics.add.collider(this.player, this.groupe_plateformes);
     this.invulnerable = false;
 
     // ENNEMIS
-    this.enemy1 = new EnemyParabolic(this, 400, 500, this.player);
-    this.enemy2 = new EnemyCone(this, 700, 500, this.player);
+    this.enemy1 = new EnemyParabolic(this, 400, 500, this.player, 50);
+    this.enemy2 = new EnemyCone(this, 700, 500, this.player, 2);
 
     // Déplacements aléatoires entre deux bornes X
     // Ajuste les bornes selon ton niveau
@@ -237,7 +269,7 @@ this.player.setData('invulnerable', false);
       this.pet.y = targetY;
     }
 
-    
+
   }
 
   updatePlayerHealthBar() {
