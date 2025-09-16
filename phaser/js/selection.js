@@ -5,8 +5,8 @@ import EnemyCone from "../src/enemy2.js";
 export default class selection extends Phaser.Scene {
   constructor() {
     super({ key: "selection" });
-    this.playerHealth = 3;
-    this.playerMaxHealth = 3;
+    this.playerHealth = 50;
+    this.playerMaxHealth = 50;
   }
 
   preload() {
