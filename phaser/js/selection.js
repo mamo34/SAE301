@@ -23,18 +23,19 @@ export default class selection extends Phaser.Scene {
     this.load.image("img_porte2", "./assets/door2.png");
     this.load.image("img_porte3", "./assets/door3.png");
 
-    this.load.tilemapTiledJSON("map1", "assets/map1.json");
-    this.load.image("tiles1", "assets/Background map 1 extend.png");
-    this.load.image("tiles2", "assets/ea489fd3-6071-4143-aed7-fd1d786891b5.png");
-    this.load.image("tiles3", "assets/e754ffcd-1873-4ceb-b0ef-635405adc338.png");
-    this.load.image("tiles4", "assets/36b0c958-0079-4b22-8533-efb9bb43834a (1).png");
-    this.load.image("tiles5", "assets/6ee6e611-06b2-4d2d-96c9-a9bbcb3d1f22-removebg-preview (3).png");
-    this.load.image("tiles6", "assets/6e454237-ef60-4a2f-bab4-3c64506ee463-removebg-preview (1).png");
+    this.load.tilemapTiledJSON("map1", "./src/map1.json");
+    this.load.image("tiles1", "./src/map/Background map 1 extend.png");
+    this.load.image("tiles2", "./src/map/ea489fd3-6071-4143-aed7-fd1d786891b5.png");
+    this.load.image("tiles3", "./src/map/e754ffcd-1873-4ceb-b0ef-635405adc338.png");
+    this.load.image("tiles4", "./src/map/36b0c958-0079-4b22-8533-efb9bb43834a (1).png");
+    this.load.image("tiles5", "./src/map/6ee6e611-06b2-4d2d-96c9-a9bbcb3d1f22-removebg-preview (3).png");
+    this.load.image("tiles6", "./src/map/6e454237-ef60-4a2f-bab4-3c64506ee463-removebg-preview (1).png");
 
   }
 
   create() {
 
+    
     // ÉTAT DE SCÈNE
     this.gameOver = false;
     // Réinitialiser la vie au (re)démarrage de la scène
@@ -42,6 +43,7 @@ export default class selection extends Phaser.Scene {
 
     // MONDE + PLATEFORMES
     this.add.image(400, 300, "img_ciel");
+    const map = this.make.tilemap({ key: "map1" }); 
     
     const tileset1 = map.addTilesetImage("Background map 1 extend", "tiles1");
     const tileset2 = map.addTilesetImage("ea489fd3-6071-4143-aed7-fd1d786891b5", "tiles2");
@@ -49,16 +51,22 @@ export default class selection extends Phaser.Scene {
     const tileset4 = map.addTilesetImage("36b0c958-0079-4b22-8533-efb9bb43834a (1)", "tiles4");
     const tileset5 = map.addTilesetImage("6ee6e611-06b2-4d2d-96c9-a9bbcb3d1f22-removebg-preview (3)", "tiles5");
     const tileset6 = map.addTilesetImage("6e454237-ef60-4a2f-bab4-3c64506ee463-removebg-preview (1)", "tiles6");
-
+    
     // Créer les calques
     map.createLayer("background_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6], 0, 0);
     map.createLayer("background_2_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6], 0, 0);
-    const platformLayer = map.createLayer("platform_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6], 0, 0);
-    map.createLayer("ladder_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6], 0, 0);
+    this.platformLayer = map.createLayer(
+  "platform_layer",
+  [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6],
+  0,
+  0
+);
+this.platformLayer.setCollisionByProperty({ dur: true });
+map.createLayer("ladder_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6], 0, 0);
     map.createLayer("decoration_back_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6], 0, 0);
     
     // Activer collisions sur tuiles ayant la propriété { dur: true }
-    platformLayer.setCollisionByProperty({ dur: true });
+    this.platformLayer.setCollisionByProperty({ dur: true });
 
     // PORTES
     this.porte1 = this.physics.add.staticSprite(600, 414, "img_porte1");
@@ -68,7 +76,13 @@ export default class selection extends Phaser.Scene {
     // PLAYER
 this.player = this.physics.add.sprite(100, 450, "img_perso");
 this.player.setBounce(0.2);
-this.player.setCollideWorldBounds(true);
+this.player.setCollideWorldBounds(false);
+
+// CAMÉRA
+this.cameras.main.startFollow(this.player);
+this.cameras.main.setFollowOffset(0, 210);
+this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
 
 map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6], 0, 0);
 
@@ -104,16 +118,15 @@ this.player.setData('invulnerable', false);
     this.clavier = this.input.keyboard.createCursorKeys();
     
 this.input.keyboard.on('keydown', (event) => {
-    if (event.key === 'o') {
-        const reach = 50; // distance max
-        [this.enemy1, this.enemy2].forEach(enemy => {
-            if (enemy && enemy.active) {
-                const dx = enemy.x - this.player.x;
-                const dy = enemy.y - this.player.y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-
-                if (dist <= reach) {
-                    enemy.takeDamage(2); // inflige 2 dégâts
+  if (event.key === 'o') {
+    const reach = 50;
+    [this.enemy1, this.enemy2, this.enemy3].forEach(enemy => {
+      if (enemy && enemy.active) {
+        const dx = enemy.x - this.player.x;
+        const dy = enemy.y - this.player.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist <= reach) {
+          enemy.takeDamage(2, this.player);
  
                     // Texte flottant "Slash!"
                     let slashText = this.add.text(this.player.x, this.player.y - 50, "Slash!", {
@@ -151,13 +164,18 @@ this.input.keyboard.on('keydown', (event) => {
 
 
     // COLLISIONS PLAYER
-    this.physics.add.collider(this.player, platformLayer);
+    this.physics.add.collider(this.player, this.platformLayer);
     this.invulnerable = false;
 
     // ENNEMIS
     this.enemy1 = new EnemyParabolic(this, 400, 500, this.player, 2, 1, 1);
     this.enemy2 = new EnemyCone(this, 700, 500, this.player, 50, 5, 10);
     this.enemy3 = new EnemySpider(this, 700, 400, this.player, 10, 5, 5);
+
+    this.physics.add.collider(this.enemy1, this.platformLayer);
+this.physics.add.collider(this.enemy2, this.platformLayer);
+this.physics.add.collider(this.enemy3, this.platformLayer);
+
 
     // Déplacements aléatoires entre deux bornes X
     // Ajuste les bornes selon ton niveau
@@ -170,19 +188,23 @@ this.input.keyboard.on('keydown', (event) => {
     this.pet.body.allowGravity = false;
 
     // PROJECTILES DU PET
-    this.projectiles = this.physics.add.group();
-    // Empêcher les tirs du pet de traverser les plateformes
-    this.physics.add.collider(this.projectiles, platformLayer, (proj) => {
-      if (proj && proj.destroy) proj.destroy();
-    });
-    this.physics.add.overlap(this.projectiles, this.enemy1, (proj, en) => {
-      this.enemy1.takeDamage(1, this.pet);
-      proj.destroy();
-    });
-    this.physics.add.overlap(this.projectiles, this.enemy2, (proj, en) => {
-      this.enemy2.takeDamage(1, this.pet);
-      proj.destroy();
-    });
+    this.projectiles = this.physics.add.group(); // <--- C'est important !
+
+    // Créer un groupe avec les ennemis existants
+this.enemies = this.physics.add.group();
+[this.enemy1, this.enemy2, this.enemy3].forEach(e => {
+  if (e) this.enemies.add(e);
+});
+
+// Overlap sécurisée
+this.physics.add.overlap(this.projectiles, this.enemies, (proj, en) => {
+  if (en && en.takeDamage) {
+    en.takeDamage(1, this.pet);
+  }
+  if (proj && proj.destroy) proj.destroy();
+});
+
+
 
     // Tir automatique du pet avec délai aléatoire 2s → 7s (stocker l'event pour pouvoir l'annuler)
     this.petShootEvent = this.time.addEvent({
@@ -192,12 +214,12 @@ this.input.keyboard.on('keydown', (event) => {
     let target = this.enemy1.active ? this.enemy1 : (this.enemy2.active ? this.enemy2 : null);
     if (target) {
       // Vérifier la ligne de vue
-      if (this.hasLineOfSight(this.pet.x, this.pet.y, target.x, target.y, platformLayer)) {
-        let bullet = this.projectiles.create(this.pet.x, this.pet.y, "img_perso");
+       let bullet = this.projectiles.create(this.pet.x, this.pet.y, "img_perso");
         bullet.setTint(0xffff00);
         bullet.setScale(0.5);
-        this.physics.moveTo(bullet, target.x, target.y, 200);
-      }
+        if (target) {
+  this.physics.moveTo(bullet, target.x, target.y, 200);
+}
     }
     // Réajuster aléatoirement le délai pour le prochain tir
     this.petShootEvent.delay = Phaser.Math.Between(2000, 7000);
@@ -207,6 +229,7 @@ this.input.keyboard.on('keydown', (event) => {
 
     // BARRE DE VIE
     this.playerHealthBar = this.add.graphics();
+    this.playerHealthBar.setScrollFactor(0);
     this.updatePlayerHealthBar();
 
 
@@ -236,18 +259,18 @@ this.input.keyboard.on('keydown', (event) => {
         return;
     }
     if (this.clavier.left.isDown) {
-        this.player.setVelocityX(-160);
+        this.player.setVelocityX(-120);
         if (this.player.anims) this.player.anims.play("anim_tourne_gauche", true);
     } else if (this.clavier.right.isDown) {
-        this.player.setVelocityX(160);
+        this.player.setVelocityX(120);
         if (this.player.anims) this.player.anims.play("anim_tourne_droite", true);
     } else {
         this.player.setVelocityX(0);
         if (this.player.anims) this.player.anims.play("anim_face");
     }
     
-    if (this.clavier.up.isDown && this.player.body.touching.down) {
-        this.player.setVelocityY(-330);
+    if (this.clavier.up.isDown && this.player.body.blocked.down) {
+        this.player.setVelocityY(-160);
     }
 
     // PORTES
@@ -275,10 +298,8 @@ this.input.keyboard.on('keydown', (event) => {
       const dy = targetEnemy.y - this.pet.y;
       const dist = Math.sqrt(dx*dx + dy*dy);
       if (dist < detectionRadius) {
-  if (this.hasLineOfSight(this.pet.x, this.pet.y, targetEnemy.x, targetEnemy.y, platformLayer)) {
-    this.physics.moveTo(this.pet, targetEnemy.x, targetEnemy.y, speed);
-    return;
-  }
+  this.physics.moveTo(this.pet, targetEnemy.x, targetEnemy.y, speed);
+
 }
 
     }
@@ -446,20 +467,7 @@ perdreVie() {
     
 }
 
-hasLineOfSight(startX, startY, endX, endY, obstacles) {
-  const line = new Phaser.Geom.Line(startX, startY, endX, endY);
-  let blocked = false;
 
-  obstacles.children.iterate((platform) => {
-    if (!platform) return;
-    const bounds = platform.getBounds();
-    if (Phaser.Geom.Intersects.LineToRectangle(line, bounds)) {
-      blocked = true;
-    }
-  });
-
-  return !blocked; // true = ligne libre
-}
 
 
 

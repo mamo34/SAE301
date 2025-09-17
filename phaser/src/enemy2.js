@@ -18,10 +18,7 @@ export default class EnemyCone extends Enemy {
   attack() {
   if (!this.active || !this.target) return;
 
-  // Vérifie la ligne de vue avant de tirer
-  if (!this.scene.hasLineOfSight(this.x, this.y, this.target.x, this.target.y, this.scene.groupe_plateformes)) {
-    return; // bloqué par un mur/sol → pas de tir
-  }
+  
 
   const baseAngle = Phaser.Math.Angle.Between(this.x, this.y, this.target.x, this.target.y);
 
