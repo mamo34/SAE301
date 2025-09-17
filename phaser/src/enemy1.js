@@ -2,7 +2,7 @@ import Enemy from "./Enemy.js";
 
 export default class EnemyParabolic extends Enemy {
   constructor(scene, x, y, target) {
-  super(scene, x, y, "img_enemy", 0x00ffff, 1, target, 2); // 👈 passer target
+  super(scene, x, y, "img_enemy", 0x00ffff, 1, target, 2, 1, 1); // 👈 passer target
   this.startShooting();
 }
 

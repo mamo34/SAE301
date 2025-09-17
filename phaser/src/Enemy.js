@@ -1,5 +1,5 @@
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y, texture = "img_enemy", tint = 0xff0000, damage = 1, target, health = 5) {
+  constructor(scene, x, y, texture = "img_enemy", tint = 0xff0000, damage = 1, target, health, xpValue, goldValue) {
     super(scene, x, y, texture);
 
     scene.add.existing(this);
@@ -10,6 +10,10 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.body.allowGravity = false;
 
     this.damage = damage;
+    this.health = health;
+    this.xpValue = xpValue;
+    this.goldValue = goldValue;
+
     this.projectiles = scene.physics.add.group();
     this.scene = scene;
     this.target = target; // le joueur
@@ -23,24 +27,15 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.projectiles,
         this.target,
         (a, b) => {
-          // Identifier de manière sûre le projectile ennemi
           const isAProj = a?.getData && a.getData('enemyProjectile') === true;
           const isBProj = b?.getData && b.getData('enemyProjectile') === true;
           const projectile = isAProj ? a : (isBProj ? b : null);
 
-          if (projectile && projectile.destroy) {
-            projectile.destroy();
-          }
+          if (projectile && projectile.destroy) projectile.destroy();
 
-          // Ignorer les dégâts si invulnérable
-          if (this.scene && this.scene.invulnerable) {
-            return;
-          }
+          if (this.scene && this.scene.invulnerable) return;
 
-          // Appliquer les dégâts
-          if (this.scene && this.scene.perdreVie) {
-            this.scene.perdreVie();
-          }
+          if (this.scene && this.scene.perdreVie) this.scene.perdreVie();
         },
         undefined,
         this
@@ -48,7 +43,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
-  // Patrol aléatoire entre minX et maxX
+  // --- Patrol aléatoire ---
   startPatrol(minX, maxX, speed = 60) {
     this.patrol = {
       minX,
@@ -57,13 +52,12 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
       dir: Math.random() < 0.5 ? -1 : 1,
     };
 
-    // Évènement qui change de comportement aléatoirement (stop / marche)
     this.patrolEvent = this.scene.time.addEvent({
       delay: Phaser.Math.Between(900, 1800),
       loop: true,
       callback: () => {
         if (!this.active) return;
-        const choice = Phaser.Math.Between(0, 2); // 0: stop, 1: marche dir, 2: inverse et marche
+        const choice = Phaser.Math.Between(0, 2);
         if (choice === 0) {
           this.setVelocityX(0);
         } else if (choice === 1) {
@@ -72,16 +66,15 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
           this.patrol.dir *= -1;
           this.setVelocityX(this.patrol.dir * this.patrol.speed);
         }
-        // randomiser le prochain délai
         this.patrolEvent.delay = Phaser.Math.Between(900, 1800);
       }
     });
   }
 
-  // Garder l'ennemi dans sa zone et inverser la direction aux bornes
   preUpdate(time, delta) {
     super.preUpdate(time, delta);
     if (!this.active) return;
+
     if (this.patrol) {
       if (this.x <= this.patrol.minX) {
         this.x = this.patrol.minX;
@@ -103,12 +96,62 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     super.destroy(fromScene);
   }
 
-  takeDamage(amount = 1) {
+  // --- Gestion des dégâts et récompenses ---
+  takeDamage(amount = 1, killer = null) {
     this.health -= amount;
-    if (this.health <= 0) this.destroy();
+    if (this.health <= 0) {
+      this.onDeath(killer);
+    }
   }
 
+  onDeath(killer = null) {
+    if (!this.active) return;
+
+    // --- XP ---
+    const xpGain = this.xpValue || 10;
+    if (this.scene.gainXP) {
+        this.scene.gainXP(xpGain);  // TOUJOURS
+        const xpText = this.scene.add.text(this.x, this.y - 20, `+${xpGain}XP`, {
+            fontSize: "12px",
+            fill: "#00ff00",
+            fontFamily: "Arial"
+        }).setOrigin(0.5).setDepth(10);
+
+        this.scene.tweens.add({
+            targets: xpText,
+            alpha: 0,
+            y: xpText.y - 30,
+            duration: 800,
+            onComplete: () => xpText.destroy()
+        });
+    }
+
+    // --- Drop gold ---
+    this.dropGold();  // TOUJOURS
+
+    // Détruire l'ennemi
+    this.destroy();
+}
+
+
+  dropGold() {
+    const gold = this.scene.physics.add.sprite(this.x, this.y, "gold");
+    gold.setScale(0.5);
+
+    this.scene.physics.add.overlap(gold, this.target, () => {
+        if (!gold.active) return;
+        gold.destroy();
+
+        // call the selection scene's method with this enemy's goldValue
+        if (this.collectGold) {
+            this.collectGold(this.goldValue);
+        }
+    });
+}
+
+
+
   attack() {
-    
+    // À compléter selon type d'ennemi
   }
 }
