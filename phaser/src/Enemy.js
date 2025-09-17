@@ -1,5 +1,5 @@
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y, texture = "img_enemy", tint = 0xff0000, damage = 1, target) {
+  constructor(scene, x, y, texture = "img_enemy", tint = 0xff0000, damage = 1, target, health = 5) {
     super(scene, x, y, texture);
 
     scene.add.existing(this);
@@ -9,7 +9,6 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.setImmovable(true);
     this.body.allowGravity = false;
 
-    this.health = 5;
     this.damage = damage;
     this.projectiles = scene.physics.add.group();
     this.scene = scene;
