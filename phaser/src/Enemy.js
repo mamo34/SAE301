@@ -13,6 +13,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.health = health;
     this.xpValue = xpValue;
     this.goldValue = goldValue;
+    this.myScene = scene;
 
     this.projectiles = scene.physics.add.group();
     this.scene = scene;
@@ -125,6 +126,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
             onComplete: () => xpText.destroy()
         });
     }
+    if (this.scene.gainMana) {
+        this.scene.gainMana(5);}
 
     // --- Drop gold ---
     this.dropGold();  // TOUJOURS
@@ -135,19 +138,28 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
 
   dropGold() {
-    const gold = this.scene.physics.add.sprite(this.x, this.y, "gold");
+    const gold = this.scene.physics.add.sprite(this.x, this.y, "img_gold");
     gold.setScale(0.5);
+    gold.setCollideWorldBounds(true);
 
-    this.scene.physics.add.overlap(gold, this.target, () => {
-        if (!gold.active) return;
-        gold.destroy();
+    gold.body.setSize(40, 40);
+    gold.body.setOffset(0, 0);
 
-        // call the selection scene's method with this enemy's goldValue
-        if (this.collectGold) {
-            this.collectGold(this.goldValue);
-        }
-    });
+    this.scene.physics.add.collider(gold, this.scene.platformLayer);
+
+    this.myScene.physics.add.overlap(gold, this.myScene.player, () => {
+    if (!gold.active) return;
+
+    gold.destroy();
+
+    this.myScene.events.emit("goldPickup", this.goldValue);
+});
+
+
 }
+
+
+
 
 
 

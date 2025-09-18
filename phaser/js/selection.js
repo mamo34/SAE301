@@ -8,20 +8,37 @@ export default class selection extends Phaser.Scene {
     super({ key: "selection" });
     this.playerHealth = 50;
     this.playerMaxHealth = 50;
+
+    this.baseXP = 15;
+    this.growth = 1.5;
+    this.playerLevel = 0;
+    this.playerXP = 0;
   }
+
+  
 
   preload() {
     const baseURL = this.sys.game.config.baseURL;
     this.load.setBaseURL(baseURL);
 
-    this.load.image("img_ciel", "./assets/sky.png");
     this.load.spritesheet("img_perso", "./assets/dude.png", {
       frameWidth: 32,
       frameHeight: 48
     });
-    this.load.image("img_porte1", "./assets/door1.png");
-    this.load.image("img_porte2", "./assets/door2.png");
-    this.load.image("img_porte3", "./assets/door3.png");
+    this.load.image("img_enemy", "./assets/enemy.png");
+    this.load.image("img_enemy1", "./assets/enemy1.png");
+    this.load.image("img_enemy2", "./assets/enemy2.png");
+    this.load.image("img_enemy3", "./assets/enemy3.png");
+
+    this.load.image("tir_enemy", "./assets/tirenemy.png");
+
+
+    this.load.image("img_potion", "./assets/fiole.png");
+    this.load.image("img_gold", "./assets/engrenage.png");
+
+    this.load.image("cadre_mana", "./assets/barre mana.png");
+    this.load.image("cadre_xp", "./assets/barre xp.png");
+    this.load.image("cadre_vie", "./assets/barre vie.png");
 
     this.load.tilemapTiledJSON("map1", "./src/map1.json");
     this.load.image("tiles1", "./src/map/Background map 1 extend.png");
@@ -30,6 +47,7 @@ export default class selection extends Phaser.Scene {
     this.load.image("tiles4", "./src/map/36b0c958-0079-4b22-8533-efb9bb43834a (1).png");
     this.load.image("tiles5", "./src/map/6ee6e611-06b2-4d2d-96c9-a9bbcb3d1f22-removebg-preview (3).png");
     this.load.image("tiles6", "./src/map/6e454237-ef60-4a2f-bab4-3c64506ee463-removebg-preview (1).png");
+
 
   }
 
@@ -42,7 +60,6 @@ export default class selection extends Phaser.Scene {
     this.playerHealth = this.playerMaxHealth;
 
     // MONDE + PLATEFORMES
-    this.add.image(400, 300, "img_ciel");
     const map = this.make.tilemap({ key: "map1" }); 
     
     const tileset1 = map.addTilesetImage("Background map 1 extend", "tiles1");
@@ -68,10 +85,6 @@ map.createLayer("ladder_layer", [tileset1, tileset2, tileset3, tileset4, tileset
     // Activer collisions sur tuiles ayant la propriété { dur: true }
     this.platformLayer.setCollisionByProperty({ dur: true });
 
-    // PORTES
-    this.porte1 = this.physics.add.staticSprite(600, 414, "img_porte1");
-    this.porte2 = this.physics.add.staticSprite(50, 264, "img_porte2");
-    this.porte3 = this.physics.add.staticSprite(750, 234, "img_porte3");
 
     // PLAYER
 this.player = this.physics.add.sprite(100, 450, "img_perso");
@@ -120,7 +133,7 @@ this.player.setData('invulnerable', false);
 this.input.keyboard.on('keydown', (event) => {
   if (event.key === 'o') {
     const reach = 50;
-    [this.enemy1, this.enemy2, this.enemy3].forEach(enemy => {
+    [this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6].forEach(enemy => {
       if (enemy && enemy.active) {
         const dx = enemy.x - this.player.x;
         const dy = enemy.y - this.player.y;
@@ -149,18 +162,50 @@ this.input.keyboard.on('keydown', (event) => {
 });
 
 
- this.playerXP = 0;
+
+
+
+
+
+
     this.playerGold = 0;
+    this.playerMana = 0;
 
     this.gainXP = (amount) => {
-        this.playerXP += amount;
-        console.log(`XP +${amount} → total: ${this.playerXP}`);
-    };
+    this.playerXP += amount;
+    console.log(`XP +${amount} → total: ${this.playerXP}`);
 
-    this.collectGold = (amount) => {
-        this.playerGold += amount;
-        console.log(`Gold +${amount} → total: ${this.playerGold}`);
-    };
+    // Boucle pour gérer plusieurs niveaux si on dépasse
+    while (this.playerXP >= this.xpForNextLevel(this.playerLevel)) {
+    this.playerXP -= this.xpForNextLevel(this.playerLevel);
+    this.playerLevel++;
+    this.levelText.setText(`Level ${this.playerLevel}`); // <-- mise à jour ici
+}
+
+
+
+    this.updatePlayerXPBar(); // mettre à jour la barre
+};
+
+
+
+    this.gainMana = (amount) => {
+    this.playerMana += amount;
+    if (this.playerMana > 100) this.playerMana = 100; // max mana
+    console.log(`Mana +${amount} → total: ${this.playerMana}`);
+    this.updatePlayerManaBar(); // <-- important !
+};
+
+
+    this.events.on("goldPickup", amount => {
+    this.playerGold += amount;
+    console.log(`Gold +${amount} → total: ${this.playerGold}`);
+    this.goldText.setText(`${this.playerGold}`);
+});
+
+
+
+    
 
 
     // COLLISIONS PLAYER
@@ -168,31 +213,45 @@ this.input.keyboard.on('keydown', (event) => {
     this.invulnerable = false;
 
     // ENNEMIS
-    this.enemy1 = new EnemyParabolic(this, 400, 500, this.player, 2, 1, 1);
-    this.enemy2 = new EnemyCone(this, 700, 500, this.player, 50, 5, 10);
-    this.enemy3 = new EnemySpider(this, 700, 400, this.player, 10, 5, 5);
+    this.enemy1 = new EnemyParabolic(this, 900, 500, this.player, 2, 1, 1);
+    this.enemy2 = new EnemyCone(this, 1000, 500, this.player, 50, 5, 10);
+    this.enemy3 = new EnemySpider(this, 1200, 400, this.player, 10, 5, 5);
+    this.enemy4 = new EnemyParabolic(this, 800, 500, this.player, 2, 1, 1);
+    this.enemy5 = new EnemyCone(this, 1100, 500, this.player, 50, 5, 10);
+    this.enemy6 = new EnemySpider(this, 1250, 400, this.player, 10, 5, 5);
 
-    this.physics.add.collider(this.enemy1, this.platformLayer);
+this.physics.add.collider(this.enemy1, this.platformLayer);
 this.physics.add.collider(this.enemy2, this.platformLayer);
 this.physics.add.collider(this.enemy3, this.platformLayer);
+this.physics.add.collider(this.enemy4, this.platformLayer);
+this.physics.add.collider(this.enemy5, this.platformLayer);
+this.physics.add.collider(this.enemy6, this.platformLayer);
+
 
 
     // Déplacements aléatoires entre deux bornes X
     // Ajuste les bornes selon ton niveau
-    if (this.enemy1.startPatrol) this.enemy1.startPatrol(320, 520, 70);
-    if (this.enemy2.startPatrol) this.enemy2.startPatrol(620, 820, 70);
+    if (this.enemy1.startPatrol) this.enemy1.startPatrol(700, 1000, 70);
+    if (this.enemy2.startPatrol) this.enemy2.startPatrol(620, 1020, 70);
+    if (this.enemy4.startPatrol) this.enemy4.startPatrol(720, 920, 70);
+    if (this.enemy5.startPatrol) this.enemy5.startPatrol(820, 1120, 70);
 
     // PET
     this.pet = this.physics.add.sprite(this.player.x + 50, this.player.y, "img_perso");
     this.pet.setTint(0x00ff00);
     this.pet.body.allowGravity = false;
+    this.petMode = "follow"; // "follow" = oscillation autour du joueur, "attack" = attaque ennemi
+    this.petDamage = 1;      // damage per hit
+    this.petRadius = 32;     // attack distance (px)
+    this.petInterval = 500; // ms between damage ticks
+
 
     // PROJECTILES DU PET
     this.projectiles = this.physics.add.group(); // <--- C'est important !
 
     // Créer un groupe avec les ennemis existants
 this.enemies = this.physics.add.group();
-[this.enemy1, this.enemy2, this.enemy3].forEach(e => {
+[this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6].forEach(e => {
   if (e) this.enemies.add(e);
 });
 
@@ -206,31 +265,164 @@ this.physics.add.overlap(this.projectiles, this.enemies, (proj, en) => {
 
 
 
-    // Tir automatique du pet avec délai aléatoire 2s → 7s (stocker l'event pour pouvoir l'annuler)
-    this.petShootEvent = this.time.addEvent({
+    // Tir automatique du pet avec délai aléatoire 2s → 7s
+this.petShootEvent = this.time.addEvent({
   delay: Phaser.Math.Between(2000, 7000),
   loop: true,
   callback: () => {
-    let target = this.enemy1.active ? this.enemy1 : (this.enemy2.active ? this.enemy2 : null);
+    // Chercher le plus proche ennemi actif
+    let target = null;
+    let minDist = 1000;
+    [this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6].forEach(enemy => {
+      if (enemy && enemy.active) {
+        const dx = enemy.x - this.pet.x;
+        const dy = enemy.y - this.pet.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < minDist) {
+          minDist = dist;
+          target = enemy;
+        }
+      }
+    });
+
     if (target) {
-      // Vérifier la ligne de vue
-       let bullet = this.projectiles.create(this.pet.x, this.pet.y, "img_perso");
-        bullet.setTint(0xffff00);
-        bullet.setScale(0.5);
-        if (target) {
-  this.physics.moveTo(bullet, target.x, target.y, 200);
-}
+      // Bloquer le pet temporairement
+      const originalVelocityX = this.pet.body.velocity.x;
+      const originalVelocityY = this.pet.body.velocity.y;
+      this.pet.body.setVelocity(0);
+
+      // Calculer angle et position de spawn du projectile
+      const angle = Phaser.Math.Angle.Between(this.pet.x, this.pet.y, target.x, target.y);
+      const offset = 20; // devant le pet
+      const spawnX = this.pet.x + Math.cos(angle) * offset;
+      const spawnY = this.pet.y + Math.sin(angle) * offset;
+
+      // Créer le projectile
+      const bullet = this.projectiles.create(spawnX, spawnY, "img_perso");
+      bullet.setTint(0xffff00);
+      bullet.setScale(0.5);
+      this.physics.moveTo(bullet, target.x, target.y, 200);
+
+      // Reprendre le mouvement du pet après 0.15s
+      this.time.delayedCall(150, () => {
+        this.pet.body.setVelocity(originalVelocityX, originalVelocityY);
+      });
     }
-    // Réajuster aléatoirement le délai pour le prochain tir
+
+    // Réajuster le délai
     this.petShootEvent.delay = Phaser.Math.Between(2000, 7000);
   }
 });
 
+// initialize per-enemy overlap state
+this.enemies.getChildren().forEach(enemy => {
+  enemy.isPetOverlapping = false;
+  enemy.petDamageEvent = null;
+});
 
-    // BARRE DE VIE
-    this.playerHealthBar = this.add.graphics();
-    this.playerHealthBar.setScrollFactor(0);
-    this.updatePlayerHealthBar();
+// When the pet first overlaps an enemy, start a repeating damage event (if none yet)
+this.physics.add.overlap(this.pet, this.enemies, (pet, enemy) => {
+  // if no damage event is running for this enemy, create one
+  if (!enemy.petDamageEvent) {
+    const DAMAGE = this.petDamage;      // damage per tick
+    const INTERVAL = this.petInterval; // ms between ticks (change to your X seconds)
+
+    enemy.petDamageEvent = this.time.addEvent({
+      delay: INTERVAL,
+      loop: true,
+      callback: () => {
+        // safety checks: if enemy died, remove the event
+        if (!enemy || !enemy.active) {
+          if (enemy && enemy.petDamageEvent) {
+            enemy.petDamageEvent.remove(false);
+            enemy.petDamageEvent = null;
+          }
+          return;
+        }
+        const dist = Phaser.Math.Distance.Between(this.pet.x, this.pet.y, enemy.x, enemy.y);
+if (dist <= this.petRadius) {
+        if (enemy.takeDamage) enemy.takeDamage(DAMAGE, this.pet);
+        // show floating damage text
+const dmgText = this.add.text(enemy.x, enemy.y - 20, `-${this.petDamage}`, {
+    fontSize: "14px",
+    fill: "#ff4444",
+    fontFamily: "Arial"
+}).setOrigin(0.5).setDepth(10);
+
+this.tweens.add({
+    targets: dmgText,
+    y: dmgText.y - 30,
+    alpha: 0,
+    duration: 600,
+    onComplete: () => dmgText.destroy()
+});
+      }}
+    });
+  }
+
+  // mark that we are currently overlapping this enemy
+  enemy.isPetOverlapping = true;
+});
+
+
+this.pauseKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L);
+this.isPause = false;
+this.pauseMenu = null; // interface de pause
+
+
+this.input.keyboard.on('keydown-M', () => {
+  if (this.petMode === "follow") {
+    this.petMode = "attack";
+    console.log("Pet déployé !");
+  } else {
+    this.petMode = "follow";
+    console.log("Pet rappelé !");
+  }
+});
+
+
+
+
+
+    // --- BARRES UI ---
+
+// --- BARRES intérieures (dessinées en premier) ---
+this.playerHealthBar = this.add.graphics().setScrollFactor(0);
+this.playerManaBar = this.add.graphics().setScrollFactor(0);
+this.playerXPBar = this.add.graphics().setScrollFactor(0);
+
+// Texte Level
+this.levelText = this.add.text(
+    this.cameras.main.width / 2 + 10, // position à droite de la barre XP
+    10, // alignement vertical avec la barre XP
+    `Level ${this.playerLevel}`,
+    {
+        fontSize: "24px",
+        fill: "#ffffff",
+        fontFamily: "Arial",
+        fontStyle: "bold"
+    }
+).setOrigin(0.5, 0).setScrollFactor(0).setDepth(10);
+
+
+// --- CADRES (au-dessus) ---
+this.cadreVie = this.add.image(20, 10, "cadre_vie").setOrigin(0, 0).setScrollFactor(0).setDepth(10).setScale(0.1);
+this.cadreMana = this.add.image(20, 80, "cadre_mana").setOrigin(0, 0).setScrollFactor(0).setDepth(10).setScale(0.1);
+this.cadreXP = this.add.image(this.cameras.main.width/2, 20, "cadre_xp").setOrigin(0.5, 0).setScrollFactor(0).setDepth(10).setScale(0.17);
+
+
+// --- GOLD ---
+this.goldIcon = this.add.image(this.cameras.main.width - 120, 20, "img_gold").setOrigin(0,0).setScrollFactor(0).setScale(1.5);
+this.goldText = this.add.text(this.cameras.main.width - 15, 30, `${this.playerGold}`, {
+    fontSize: "35px",
+    fill: "#ffa41aff",
+    fontFamily: "Arial"
+}).setOrigin(1, 0).setScrollFactor(0);
+
+// Initialiser les barres
+this.updatePlayerHealthBar();
+this.updatePlayerManaBar();
+this.updatePlayerXPBar();
 
 
 
@@ -238,73 +430,71 @@ this.physics.add.overlap(this.projectiles, this.enemies, (proj, en) => {
   }
 
   update() {
-    // DEPLACEMENT PLAYER
-    if (!this.player || !this.player.body) {
-        return; // Sortir de update si le player n'existe plus
-    }
+// Toggle pause avec L
+if (Phaser.Input.Keyboard.JustDown(this.pauseKey)) {
+    this.isPause = !this.isPause;
 
-    // Si game over, éviter toute logique inutile
-    if (this.gameOver) {
-        return;
-    }
-
-    // Sécurité forte: toujours forcer affichage/activation tant que pas game over
-    this.player.setVisible(true);
-    this.player.setActive(true);
-    if (this.player.alpha < 1) this.player.setAlpha(1);
-    if (this.player.body && this.player.body.enable === false) this.player.body.enable = true;
-
-    // DEPLACEMENT PLAYER
-    if (!this.player.active) {
-        return;
-    }
-    if (this.clavier.left.isDown) {
-        this.player.setVelocityX(-120);
-        if (this.player.anims) this.player.anims.play("anim_tourne_gauche", true);
-    } else if (this.clavier.right.isDown) {
-        this.player.setVelocityX(120);
-        if (this.player.anims) this.player.anims.play("anim_tourne_droite", true);
+    if (this.isPause) {
+        this.physics.world.pause(); // stoppe toute la physique
+        this.time.paused = true;    // stoppe les timers
+        this.showPauseMenu();
     } else {
-        this.player.setVelocityX(0);
-        if (this.player.anims) this.player.anims.play("anim_face");
+        this.physics.world.resume(); // reprend la physique
+        this.time.paused = false;    // reprend les timers
+        this.hidePauseMenu();
     }
-    
-    if (this.clavier.up.isDown && this.player.body.blocked.down) {
-        this.player.setVelocityY(-160);
-    }
-
-    // PORTES
-    if (Phaser.Input.Keyboard.JustDown(this.clavier.space)) {
-      if (this.physics.overlap(this.player, this.porte1)) this.scene.start("niveau1");
-      if (this.physics.overlap(this.player, this.porte2)) this.scene.start("niveau2");
-      if (this.physics.overlap(this.player, this.porte3)) this.scene.start("niveau3");
-    }
-
-    // Dans la section COMPORTEMENT PET de update()
-    if (!this.pet || !this.pet.body || !this.player) {
-        return;
-    }
-
-// Reste du code du pet...
-
-    // COMPORTEMENT PET
-    const detectionRadius = 150;
-    const speed = 120;
-    this.pet.body.setVelocity(0);
-
-    let targetEnemy = this.enemy1.active ? this.enemy1 : (this.enemy2.active ? this.enemy2 : null);
-    if (targetEnemy) {
-      const dx = targetEnemy.x - this.pet.x;
-      const dy = targetEnemy.y - this.pet.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < detectionRadius) {
-  this.physics.moveTo(this.pet, targetEnemy.x, targetEnemy.y, speed);
-
 }
 
-    }
+// Si en pause, bloquer le reste du update
+if (this.isPause) return;
 
-    // Suivi joueur ou oscillation
+  if (!this.player || !this.player.body) return;
+  if (this.gameOver) return;
+
+  // --- PLAYER ---
+  if (this.clavier.left.isDown) {
+    this.player.setVelocityX(-120);
+    this.player.anims.play("anim_tourne_gauche", true);
+  } else if (this.clavier.right.isDown) {
+    this.player.setVelocityX(120);
+    this.player.anims.play("anim_tourne_droite", true);
+  } else {
+    this.player.setVelocityX(0);
+    this.player.anims.play("anim_face");
+  }
+  if (this.clavier.up.isDown && this.player.body.blocked.down) {
+    this.player.setVelocityY(-160);
+  }
+
+  // --- PET ---
+  if (!this.pet || !this.pet.body) return;
+
+  const speed = 120;
+  const detectionRadius = 150;
+
+  // trouve ennemi le plus proche
+  let closestEnemy = null;
+  let minDist = detectionRadius;
+  this.enemies.getChildren().forEach(enemy => {
+    if (enemy && enemy.active) {
+      const dist = Phaser.Math.Distance.Between(this.pet.x, this.pet.y, enemy.x, enemy.y);
+      if (dist < minDist) {
+        minDist = dist;
+        closestEnemy = enemy;
+      }
+    }
+  });
+
+  if (this.petMode === "attack" && closestEnemy) {
+    // garde ton moveToObject + seuil pour éviter jitter
+    const dist = Phaser.Math.Distance.Between(this.pet.x, this.pet.y, closestEnemy.x, closestEnemy.y);
+    if (dist > 12) {
+      this.physics.moveToObject(this.pet, closestEnemy, speed);
+    } else {
+      this.pet.body.setVelocity(0, 0);
+    }
+  } else {
+    // mode follow → réutilise ton oscillation
     let targetX, targetY;
     if (this.clavier.right.isDown) {
       targetX = this.player.x + 40;
@@ -319,34 +509,68 @@ this.physics.add.overlap(this.projectiles, this.enemies, (proj, en) => {
       targetY = this.player.y - 40;
     }
 
-    const dx = targetX - this.pet.x;
-    const dy = targetY - this.pet.y;
-    const dist = Math.sqrt(dx*dx + dy*dy);
-    if (dist > 5) {
+    const dist = Phaser.Math.Distance.Between(this.pet.x, this.pet.y, targetX, targetY);
+    if (dist > 6) {
       this.physics.moveTo(this.pet, targetX, targetY, speed);
     } else {
+      this.pet.body.setVelocity(0, 0);
       this.pet.x = targetX;
       this.pet.y = targetY;
     }
-
-
   }
+
+  // --- CLEANUP DAMAGE EVENTS ---
+  this.enemies.getChildren().forEach(enemy => {
+    if (enemy.petDamageEvent && !this.physics.overlap(this.pet, enemy)) {
+      enemy.petDamageEvent.remove(false);
+      enemy.petDamageEvent = null;
+      enemy.isPetOverlapping = false;
+    }
+  });
+}
+
 
   updatePlayerHealthBar() {
+    const width = 235; // à ajuster selon ton cadre
+    const height = 20;
+    const x = 20 + 50; // décalage intérieur
+    const y = 30;
+
     this.playerHealthBar.clear();
-    const barWidth = 100;
-    const barHeight = 10;
-    const x = 20;
-    const y = 20;
-
-    // Fond rouge
     this.playerHealthBar.fillStyle(0xff0000);
-    this.playerHealthBar.fillRect(x, y, barWidth, barHeight);
+    this.playerHealthBar.fillRect(x, y, (this.playerHealth / this.playerMaxHealth) * width, height);
+}
 
-    // Portion verte
-    this.playerHealthBar.fillStyle(0x00ff00);
-    this.playerHealthBar.fillRect(x, y, (this.playerHealth / this.playerMaxHealth) * barWidth, barHeight);
-  }
+updatePlayerManaBar() {
+     const width = 235; // à ajuster selon ton cadre
+    const height = 20;
+    const x = 20 + 50; // décalage intérieur
+    const y = 100;
+
+    this.playerManaBar.clear();
+    this.playerManaBar.fillStyle(0x0000ff);
+    this.playerManaBar.fillRect(x, y, (this.playerMana / 100) * width, height); // maxMana = 100
+}
+
+xpForNextLevel = (level) => {
+    return Math.floor(this.baseXP * Math.pow(this.growth, level - 1));
+};
+
+
+
+updatePlayerXPBar() {
+    const width = 450;
+    const height = 30;
+    const x = this.cameras.main.width / 2 - width/2 + 60;
+    const y = 55;
+
+    const xpNeeded = this.xpForNextLevel(this.playerLevel);
+    this.playerXPBar.clear();
+    this.playerXPBar.fillStyle(0x00ff00);
+    this.playerXPBar.fillRect(x, y, (this.playerXP / xpNeeded) * width, height);
+}
+
+
 
 
   playerDeath() {
@@ -370,6 +594,8 @@ this.physics.add.overlap(this.projectiles, this.enemies, (proj, en) => {
     
     
 }
+
+
 
 
 playerRespawn() {
@@ -446,9 +672,13 @@ perdreVie() {
         // Désactiver entités et nettoyer projectiles
         if (this.enemy1) this.enemy1.setActive(false).setVisible(false);
         if (this.enemy2) this.enemy2.setActive(false).setVisible(false);
+        if (this.enemy4) this.enemy2.setActive(false).setVisible(false);
+        if (this.enemy5) this.enemy2.setActive(false).setVisible(false);
         if (this.projectiles) this.projectiles.clear(true, true);
         if (this.enemy1?.projectiles) this.enemy1.projectiles.clear(true, true);
         if (this.enemy2?.projectiles) this.enemy2.projectiles.clear(true, true);
+        if (this.enemy4?.projectiles) this.enemy4.projectiles.clear(true, true);
+        if (this.enemy5?.projectiles) this.enemy5.projectiles.clear(true, true);
         if (this.player) this.player.setTint(0xff0000);
         this.add.text(400, 300, 'GAME OVER', { 
             fontSize: '32px', 
@@ -469,6 +699,38 @@ perdreVie() {
 
 
 
+showPauseMenu() {
+    // Exemple simple : un rectangle + texte
+    this.pauseMenu = this.add.container(this.cameras.main.centerX, this.cameras.main.centerY);
+
+    const bg = this.add.rectangle(0, 0, 300, 200, 0x000000, 0.7);
+    const txt = this.add.text(0, -50, "Pause Menu", { fontSize: "24px", fill: "#fff" }).setOrigin(0.5);
+
+    const resumeBtn = this.add.text(0, 20, "▶ Resume", { fontSize: "20px", fill: "#0f0" })
+        .setOrigin(0.5)
+        .setInteractive()
+        .on("pointerdown", () => {
+            this.isPause = false;
+            this.hidePauseMenu();
+        });
+
+    const quitBtn = this.add.text(0, 70, "⏹ Quit", { fontSize: "20px", fill: "#f00" })
+        .setOrigin(0.5)
+        .setInteractive()
+        .on("pointerdown", () => {
+            this.scene.start("MainMenu"); // ou autre scène de ton jeu
+        });
+
+    this.pauseMenu.add([bg, txt, resumeBtn, quitBtn]);
+    this.pauseMenu.setDepth(1000); // pour passer au-dessus de tout
+}
+
+hidePauseMenu() {
+    if (this.pauseMenu) {
+        this.pauseMenu.destroy(true);
+        this.pauseMenu = null;
+    }
+}
 
 
 

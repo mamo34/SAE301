@@ -2,7 +2,7 @@ import Enemy from "./Enemy.js";
 
 export default class EnemyCone extends Enemy {
   constructor(scene, x, y, target) {
-  super(scene, x, y, "img_enemy", 0x00ffff, 1, target, 50, 5, 10); // 👈 passer target
+  super(scene, x, y, "img_enemy2", 0x00ffff, 1, target, 50, 5, 10); // 👈 passer target
   this.startShooting();
 }
 
@@ -26,7 +26,7 @@ export default class EnemyCone extends Enemy {
     const spread = Phaser.Math.DegToRad(i * (10 + Math.random() * 5));
     const angle = baseAngle + spread;
 
-    let bullet = this.projectiles.create(this.x, this.y, "img_enemy");
+    let bullet = this.projectiles.create(this.x, this.y, "tir_enemy");
     bullet.setTint(0xff00ff);
     bullet.setScale(0.4);
     bullet.body.allowGravity = false;

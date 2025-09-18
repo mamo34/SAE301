@@ -1,8 +1,6 @@
 // chargement des librairies
 import selection from "./js/selection.js";
-import niveau1 from "./js/niveau1.js";
-import niveau2 from "./js/niveau2.js";
-import niveau3 from "./js/niveau3.js";
+import debut from "./js/debut.js";
 
 // configuration générale du jeu
 var config = {
@@ -26,11 +24,11 @@ var config = {
       debug: true // afficher les hitbox et vecteurs
     }
   },
-  scene: [selection, niveau1, niveau2, niveau3],
+  scene: [debut, selection],
   baseURL: window.location.pathname.replace(/\/[^/]*$/, '')
 };
 
 
 // création et lancement du jeu
 var game = new Phaser.Game(config);
-game.scene.start("selection");
+game.scene.start("debut");

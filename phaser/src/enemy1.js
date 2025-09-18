@@ -2,7 +2,7 @@ import Enemy from "./Enemy.js";
 
 export default class EnemyParabolic extends Enemy {
   constructor(scene, x, y, target) {
-  super(scene, x, y, "img_enemy", 0x00ffff, 1, target, 2, 1, 1); // 👈 passer target
+  super(scene, x, y, "img_enemy1", 0x00ffff, 1, target, 2, 1, 1); // 👈 passer target
   this.startShooting();
 }
 
@@ -18,7 +18,7 @@ export default class EnemyParabolic extends Enemy {
   attack() {
     if (!this.active || !this.target) return;
 
-    let bullet = this.projectiles.create(this.x, this.y, "img_enemy");
+    let bullet = this.projectiles.create(this.x, this.y, "tir_enemy");
     bullet.setTint(0x00ffff);
     bullet.setScale(0.4);
     if (bullet.setData) bullet.setData('enemyProjectile', true);
