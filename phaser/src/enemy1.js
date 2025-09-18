@@ -16,8 +16,13 @@ export default class EnemyParabolic extends Enemy {
   }
 
   attack() {
-    if (!this.active || !this.target) return;
+    // Vérifie si l'ennemi est actif et si le joueur est à portée
+    if (!this.active || !this.target || !this.target.active) return;
 
+    const dist = Phaser.Math.Distance.Between(this.x, this.y, this.target.x, this.target.y);
+    if (dist > 500) return; // 🔹 Ne tire que si le joueur est dans un rayon de 200
+
+    // Tir parabolique
     let bullet = this.projectiles.create(this.x, this.y, "tir_enemy");
     bullet.setTint(0x00ffff);
     bullet.setScale(0.4);

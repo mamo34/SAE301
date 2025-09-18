@@ -19,6 +19,9 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.scene = scene;
     this.target = target; // le joueur
 
+    this.detectionRadius = 200; // rayon fixe pour tous les ennemis
+    this.isChasing = false;
+
     // collisions projectiles ↔ plateformes
     scene.physics.add.collider(this.projectiles, scene.groupe_plateformes, proj => proj.destroy());
 
@@ -76,6 +79,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     super.preUpdate(time, delta);
     if (!this.active) return;
 
+    // --- Patrol ---
     if (this.patrol) {
       if (this.x <= this.patrol.minX) {
         this.x = this.patrol.minX;
@@ -86,6 +90,12 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.patrol.dir = -1;
         this.setVelocityX(-this.patrol.speed);
       }
+    }
+
+    // --- Détection du joueur ---
+    if (this.target && this.target.active) {
+      const dist = Phaser.Math.Distance.Between(this.x, this.y, this.target.x, this.target.y);
+      this.isChasing = dist <= this.detectionRadius;
     }
   }
 

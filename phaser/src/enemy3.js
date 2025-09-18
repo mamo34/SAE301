@@ -10,7 +10,11 @@ export default class EnemySpider extends Enemy {
     // Ajout overlap dégâts
     if (this.target) {
       scene.physics.add.overlap(this, this.target, () => {
-        if (this.active && this.target) {
+        if (!this.active || !this.target || !this.target.active) return;
+
+        // 🔹 Vérifie le rayon de détection avant de faire des dégâts
+        const dist = Phaser.Math.Distance.Between(this.x, this.y, this.target.x, this.target.y);
+        if (dist <= 700) {
           this.target.scene.perdreVie?.();
         }
       });
@@ -28,7 +32,10 @@ export default class EnemySpider extends Enemy {
   }
 
   jumpToTarget() {
-    if (!this.active || !this.target) return;
+    if (!this.active || !this.target || !this.target.active) return;
+
+    const dist = Phaser.Math.Distance.Between(this.x, this.y, this.target.x, this.target.y);
+    if (dist > 700) return; // 🔹 Ne saute pas si le joueur est trop loin
 
     const startX = this.x;
     const startY = this.y;
@@ -52,7 +59,6 @@ export default class EnemySpider extends Enemy {
           dy * progress +
           Math.sin(progress * Math.PI) * -this.maxJumpHeight;
       }
-      // ⚠️ plus de perte de vie ici !
     });
   }
 

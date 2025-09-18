@@ -13,6 +13,19 @@ export default class selection extends Phaser.Scene {
     this.growth = 1.5;
     this.playerLevel = 0;
     this.playerXP = 0;
+
+    // Branches de compétences
+    this.skills = {
+        Armes: 0,
+        Survie: 0,
+        Mobilité: 0
+    };
+
+    this.maxSkillLevel = 5;
+    this.skillPoints = 0; // Points disponibles à dépenser
+    this.selectedSkillIndex = 0; // Pour naviguer dans le menu
+    this.skillKeys = ["Armes", "Survie", "Mobilité"];
+
   }
 
   
@@ -163,6 +176,26 @@ this.input.keyboard.on('keydown', (event) => {
 
 
 
+this.input.keyboard.on('keydown', (event) => {
+    if (!this.isPause) return;
+
+    if (event.key === "ArrowUp") {
+        this.selectedSkillIndex = Phaser.Math.Wrap(this.selectedSkillIndex - 1, 0, this.skillKeys.length);
+        this.skillSelector.y = -50 + this.selectedSkillIndex * 40;
+    } else if (event.key === "ArrowDown") {
+        this.selectedSkillIndex = Phaser.Math.Wrap(this.selectedSkillIndex + 1, 0, this.skillKeys.length);
+        this.skillSelector.y = -50 + this.selectedSkillIndex * 40;
+    } else if (event.key.toLowerCase() === "i") {
+    let skill = this.skillKeys[this.selectedSkillIndex];
+    if (this.skillPoints > 0 && this.skills[skill] < this.maxSkillLevel) {
+        this.skills[skill]++;
+        this.skillPoints--; 
+        this.updateSkillUI(this.selectedSkillIndex);
+    }
+}
+
+
+});
 
 
 
@@ -179,8 +212,12 @@ this.input.keyboard.on('keydown', (event) => {
     while (this.playerXP >= this.xpForNextLevel(this.playerLevel)) {
     this.playerXP -= this.xpForNextLevel(this.playerLevel);
     this.playerLevel++;
-    this.levelText.setText(`Level ${this.playerLevel}`); // <-- mise à jour ici
+    this.levelText.setText(`Level ${this.playerLevel}`);
+
+    // Ajouter un point d'amélioration
+    this.skillPoints++;
 }
+
 
 
 
@@ -213,12 +250,12 @@ this.input.keyboard.on('keydown', (event) => {
     this.invulnerable = false;
 
     // ENNEMIS
-    this.enemy1 = new EnemyParabolic(this, 900, 500, this.player, 2, 1, 1);
-    this.enemy2 = new EnemyCone(this, 1000, 500, this.player, 50, 5, 10);
-    this.enemy3 = new EnemySpider(this, 1200, 400, this.player, 10, 5, 5);
-    this.enemy4 = new EnemyParabolic(this, 800, 500, this.player, 2, 1, 1);
-    this.enemy5 = new EnemyCone(this, 1100, 500, this.player, 50, 5, 10);
-    this.enemy6 = new EnemySpider(this, 1250, 400, this.player, 10, 5, 5);
+    this.enemy1 = new EnemyParabolic(this, 900, 500, this.player, 2, 1, 1, 200);
+    this.enemy2 = new EnemyCone(this, 1000, 500, this.player, 50, 5, 10, 200);
+    this.enemy3 = new EnemySpider(this, 1200, 400, this.player, 10, 5, 5, 200);
+    this.enemy4 = new EnemyParabolic(this, 800, 500, this.player, 2, 1, 1, 200);
+    this.enemy5 = new EnemyCone(this, 1100, 500, this.player, 50, 5, 10, 200);
+    this.enemy6 = new EnemySpider(this, 1250, 400, this.player, 10, 5, 5, 200);
 
 this.physics.add.collider(this.enemy1, this.platformLayer);
 this.physics.add.collider(this.enemy2, this.platformLayer);
@@ -425,6 +462,31 @@ this.updatePlayerManaBar();
 this.updatePlayerXPBar();
 
 
+// Container pour les skills
+this.skillUI = this.add.container(20, this.cameras.main.height - 100).setScrollFactor(0).setDepth(10);
+
+// Texte des compétences
+this.skillUIText = [];
+for (let i = 0; i < this.skillKeys.length; i++) {
+    let skill = this.skillKeys[i];
+    let txt = this.add.text(0, i * 25, `${skill}: ${this.skills[skill]} / ${this.maxSkillLevel}`, {
+        fontSize: "18px",
+        fill: "#fff",
+        fontFamily: "Arial"
+    }).setOrigin(0, 0);
+    this.skillUI.add(txt);
+    this.skillUIText.push(txt);
+}
+
+// Points disponibles
+this.skillPointsUI = this.add.text(0, this.skillKeys.length * 25 + 5, `Points à dépenser: ${this.skillPoints}`, {
+    fontSize: "16px",
+    fill: "#0f0",
+    fontFamily: "Arial"
+}).setOrigin(0, 0);
+this.skillUI.add(this.skillPointsUI);
+
+
 
     
   }
@@ -596,6 +658,15 @@ updatePlayerXPBar() {
 }
 
 
+updateSkillUI(index) {
+    const skill = this.skillKeys[index];
+    if (this.skillUIText && this.skillUIText[index])
+        this.skillUIText[index].setText(`${skill}: ${this.skills[skill]} / ${this.maxSkillLevel}`);
+    if (this.skillMenuTexts && this.skillMenuTexts[index])
+        this.skillMenuTexts[index].setText(`${skill}: ${this.skills[skill]} / ${this.maxSkillLevel}`);
+    if (this.skillPointsUI) this.skillPointsUI.setText(`Points à dépenser: ${this.skillPoints}`);
+    if (this.skillPointsText) this.skillPointsText.setText(`Points à dépenser: ${this.skillPoints}`);
+}
 
 
 playerRespawn() {
@@ -706,23 +777,42 @@ showPauseMenu() {
     const bg = this.add.rectangle(0, 0, 300, 200, 0x000000, 0.7);
     const txt = this.add.text(0, -50, "Pause Menu", { fontSize: "24px", fill: "#fff" }).setOrigin(0.5);
 
-    const resumeBtn = this.add.text(0, 20, "▶ Resume", { fontSize: "20px", fill: "#0f0" })
-        .setOrigin(0.5)
-        .setInteractive()
-        .on("pointerdown", () => {
-            this.isPause = false;
-            this.hidePauseMenu();
-        });
+    
 
-    const quitBtn = this.add.text(0, 70, "⏹ Quit", { fontSize: "20px", fill: "#f00" })
-        .setOrigin(0.5)
-        .setInteractive()
-        .on("pointerdown", () => {
-            this.scene.start("MainMenu"); // ou autre scène de ton jeu
-        });
-
-    this.pauseMenu.add([bg, txt, resumeBtn, quitBtn]);
     this.pauseMenu.setDepth(1000); // pour passer au-dessus de tout
+
+
+    this.skillPointsText = this.add.text(0, 80, `Points à dépenser: ${this.skillPoints}`, {
+    fontSize: "20px",
+    fill: "#0f0",
+    fontFamily: "Arial"
+}).setOrigin(0.5);
+this.pauseMenu.add(this.skillPointsText);
+
+    // Menu Skills
+this.skillMenuTexts = [];
+
+for (let i = 0; i < this.skillKeys.length; i++) {
+    let skill = this.skillKeys[i];
+    let yPos = -50 + i * 40; // espacement vertical
+
+    let txt = this.add.text(0, yPos, `${skill}: ${this.skills[skill]} / ${this.maxSkillLevel}`, {
+        fontSize: "20px",
+        fill: "#fff",
+        fontFamily: "Arial"
+    }).setOrigin(0.5);
+    
+    this.skillMenuTexts.push(txt);
+    this.pauseMenu.add(txt);
+}
+
+// Indicateur de sélection
+this.skillSelector = this.add.text(-120, -50 + this.selectedSkillIndex * 40, "→", {
+    fontSize: "20px",
+    fill: "#ff0"
+}).setOrigin(0.5);
+this.pauseMenu.add(this.skillSelector);
+
 }
 
 hidePauseMenu() {
