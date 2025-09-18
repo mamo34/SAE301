@@ -104,6 +104,12 @@ this.player = this.physics.add.sprite(100, 450, "img_perso");
 this.player.setBounce(0.2);
 this.player.setCollideWorldBounds(false);
 
+// Créer un mur invisible à gauche
+const leftWall = this.add.rectangle(0, map.heightInPixels / 2, -2, map.heightInPixels);
+this.physics.add.existing(leftWall, true); // true = statique
+this.physics.add.collider(this.player, leftWall);
+
+
 // CAMÉRA
 this.cameras.main.startFollow(this.player);
 this.cameras.main.setFollowOffset(0, 210);
@@ -216,7 +222,13 @@ this.input.keyboard.on('keydown', (event) => {
 
     // Ajouter un point d'amélioration
     this.skillPoints++;
+
+    // **Mettre à jour toutes les UI**
+    for (let i = 0; i < this.skillKeys.length; i++) {
+        this.updateSkillUI(i);
+    }
 }
+
 
 
 
@@ -660,13 +672,20 @@ updatePlayerXPBar() {
 
 updateSkillUI(index) {
     const skill = this.skillKeys[index];
+
+    // UI permanente (en bas)
     if (this.skillUIText && this.skillUIText[index])
         this.skillUIText[index].setText(`${skill}: ${this.skills[skill]} / ${this.maxSkillLevel}`);
+    if (this.skillPointsUI)
+        this.skillPointsUI.setText(`Points à dépenser: ${this.skillPoints}`);
+
+    // UI pause
     if (this.skillMenuTexts && this.skillMenuTexts[index])
         this.skillMenuTexts[index].setText(`${skill}: ${this.skills[skill]} / ${this.maxSkillLevel}`);
-    if (this.skillPointsUI) this.skillPointsUI.setText(`Points à dépenser: ${this.skillPoints}`);
-    if (this.skillPointsText) this.skillPointsText.setText(`Points à dépenser: ${this.skillPoints}`);
+    if (this.skillPointsText)
+        this.skillPointsText.setText(`Points à dépenser: ${this.skillPoints}`);
 }
+
 
 
 playerRespawn() {
