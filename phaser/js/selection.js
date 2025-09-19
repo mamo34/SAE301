@@ -9,7 +9,7 @@ export default class selection extends Phaser.Scene {
     this.playerHealth = 50;
     this.playerMaxHealth = 50;
 
-    
+    this.degatPlayerCorpsAcorps = 2;
 
     this.baseXP = 15;
     this.growth = 1.5;
@@ -204,36 +204,71 @@ this.isDashing = false;
 
 
     
-this.input.keyboard.on('keydown', (event) => {
-  if (event.key === 'o') {
-    const reach = 50;
-    [this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6].forEach(enemy => {
-      if (enemy && enemy.active) {
-        const dx = enemy.x - this.player.x;
-        const dy = enemy.y - this.player.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist <= reach) {
-          enemy.takeDamage(2, this.player);
- 
-                    // Texte flottant "Slash!"
-                    let slashText = this.add.text(this.player.x, this.player.y - 50, "Slash!", {
-                        fontSize: "12px",
-                        fill: "#ff0000",
-                        fontFamily: "Arial"
-                    }).setOrigin(0.5).setDepth(10);
+// Cooldown d’attaque
+this.canAttack = true;
 
-                    this.tweens.add({
-                        targets: slashText,
-                        alpha: 0,
-                        y: slashText.y - 30,
-                        duration: 500,
-                        onComplete: () => slashText.destroy()
-                    });
-                }
-            }
-        });
-    }
+this.input.keyboard.on('keydown-O', () => {
+    if (!this.player || !this.canAttack) return;
+
+    this.canAttack = false; // bloquer le spam
+
+    // Largeur et hauteur de la hitbox devant le joueur
+    const hitboxWidth = 64;
+    const hitboxHeight = 40;
+
+    // Positionner la hitbox devant selon la direction
+    let offsetX = this.right ? 50 : this.left ? -50 : 0;
+    let offsetY = 0;
+
+    const hitbox = this.add.rectangle(
+        this.player.x + offsetX,
+        this.player.y + offsetY,
+        hitboxWidth,
+        hitboxHeight,
+        0xff0000, // debug (rouge transparent)
+        0.3
+    );
+    this.physics.add.existing(hitbox);
+    hitbox.body.allowGravity = false;
+
+    // Flag interne → éviter plusieurs coups sur un même appui
+    let hitRegistered = false;
+
+    // Détecter les ennemis touchés
+    this.physics.add.overlap(hitbox, this.enemies, (hb, enemy) => {
+        if (!hitRegistered && enemy && enemy.active && enemy.takeDamage) {
+            hitRegistered = true; // empêcher autres overlaps
+            enemy.takeDamage(this.degatPlayerCorpsAcorps, this.player);
+
+            // Texte flottant "Slash!"
+            let slashText = this.add.text(enemy.x, enemy.y - 40, "Slash!", {
+                fontSize: "14px",
+                fill: "#ff0000",
+                fontFamily: "Arial"
+            }).setOrigin(0.5).setDepth(10);
+
+            this.tweens.add({
+                targets: slashText,
+                alpha: 0,
+                y: slashText.y - 20,
+                duration: 500,
+                onComplete: () => slashText.destroy()
+            });
+        }
+    });
+
+    // Détruire la hitbox après 200ms
+    this.time.delayedCall(200, () => {
+        hitbox.destroy();
+    });
+
+    // Cooldown (0.7s)
+    this.time.delayedCall(700, () => {
+        this.canAttack = true;
+    });
 });
+
+
 
 
 
@@ -319,28 +354,48 @@ this.input.keyboard.on('keydown', (event) => {
     this.invulnerable = false;
 
     // ENNEMIS
-    this.enemy1 = new EnemyParabolic(this, 1500, 500, this.player, 2, 1, 1, 200);
-    this.enemy2 = new EnemyCone(this, 3000, 500, this.player, 50, 5, 10, 200);
-    this.enemy3 = new EnemySpider(this, 1800, 400, this.player, 10, 5, 5, 200);
+    this.enemy0 = new EnemyParabolic(this, 1500, 500, this.player, 2, 1, 1, 200);
+    this.enemy1 = new EnemyParabolic(this, 1700, 500, this.player, 2, 1, 1, 200);
+    this.enemy2 = new EnemyParabolic(this, 1900, 500, this.player, 2, 1, 1, 200);
+    this.enemy3 = new EnemySpider(this, 3050, 400, this.player, 10, 5, 5, 200);
     this.enemy4 = new EnemyParabolic(this, 2800, 500, this.player, 2, 1, 1, 200);
-    this.enemy5 = new EnemyCone(this, 2000, 500, this.player, 50, 5, 10, 200);
-    this.enemy6 = new EnemySpider(this, 3050, 400, this.player, 10, 5, 5, 200);
+    this.enemy5 = new EnemySpider(this, 1800, 400, this.player, 10, 5, 5, 200);
+    this.enemy6 = new EnemyParabolic(this, 2500, 400, this.player, 10, 5, 5, 200);
+    this.enemy7 = new EnemyParabolic(this, 2200, 500, this.player, 2, 1, 1, 200);
+    this.enemy8 = new EnemyParabolic(this, 3050, 400, this.player, 10, 5, 5, 200);
+    this.enemy9 = new EnemyParabolic(this, 2700, 400, this.player, 10, 5, 5, 200);
 
+    this.enemy10 = new EnemyCone(this, 1000, 1900, this.player, 50, 5, 10, 200);
+    this.enemy11 = new EnemyCone(this, 2000, 1900, this.player, 50, 5, 10, 200);
+
+this.physics.add.collider(this.enemy0, this.platformLayer);
 this.physics.add.collider(this.enemy1, this.platformLayer);
 this.physics.add.collider(this.enemy2, this.platformLayer);
 this.physics.add.collider(this.enemy3, this.platformLayer);
 this.physics.add.collider(this.enemy4, this.platformLayer);
 this.physics.add.collider(this.enemy5, this.platformLayer);
 this.physics.add.collider(this.enemy6, this.platformLayer);
+this.physics.add.collider(this.enemy7, this.platformLayer);
+this.physics.add.collider(this.enemy8, this.platformLayer);
+this.physics.add.collider(this.enemy9, this.platformLayer);
+this.physics.add.collider(this.enemy10, this.platformLayer);
+this.physics.add.collider(this.enemy11, this.platformLayer);
 
 
 
     // Déplacements aléatoires entre deux bornes X
     // Ajuste les bornes selon ton niveau
-    if (this.enemy1.startPatrol) this.enemy1.startPatrol(1300, 1800, 70);
-    if (this.enemy2.startPatrol) this.enemy2.startPatrol(2700, 3300, 70);
-    if (this.enemy4.startPatrol) this.enemy4.startPatrol(2700, 2500, 70);
-    if (this.enemy5.startPatrol) this.enemy5.startPatrol(2600, 3200, 70);
+    if (this.enemy0.startPatrol) this.enemy0.startPatrol(1300, 1800, 70);
+    if (this.enemy1.startPatrol) this.enemy1.startPatrol(1500, 1800, 70);
+    if (this.enemy2.startPatrol) this.enemy2.startPatrol(1900, 2300, 70);
+    if (this.enemy4.startPatrol) this.enemy4.startPatrol(2300, 2900, 70);
+    if (this.enemy6.startPatrol) this.enemy6.startPatrol(2400, 3200, 70);
+    if (this.enemy7.startPatrol) this.enemy7.startPatrol(2000, 2400, 70);
+    if (this.enemy8.startPatrol) this.enemy8.startPatrol(2750, 3300, 70);
+    if (this.enemy9.startPatrol) this.enemy9.startPatrol(2500, 2900, 70);
+
+    if (this.enemy10.startPatrol) this.enemy10.startPatrol(800, 1200, 70);
+    if (this.enemy11.startPatrol) this.enemy11.startPatrol(1600, 2500, 70);
 
     // PET
     this.pet = this.physics.add.sprite(this.player.x + 50, this.player.y, "img_perso");
@@ -356,7 +411,7 @@ this.physics.add.collider(this.enemy6, this.platformLayer);
 
     // Créer un groupe avec les ennemis existants
 this.enemies = this.physics.add.group();
-[this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6].forEach(e => {
+[this.enemy0, this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11].forEach(e => {
   if (e) this.enemies.add(e);
 });
 
@@ -378,7 +433,7 @@ this.petShootEvent = this.time.addEvent({
     // Chercher le plus proche ennemi actif
     let target = null;
     let minDist = 1000;
-    [this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6].forEach(enemy => {
+    [this.enemy0, this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11].forEach(enemy => {
       if (enemy && enemy.active) {
         const dx = enemy.x - this.pet.x;
         const dy = enemy.y - this.pet.y;
@@ -517,7 +572,7 @@ this.cadreXP = this.add.image(this.cameras.main.width/2, 20, "cadre_xp").setOrig
 
 
 // --- GOLD ---
-this.goldIcon = this.add.image(this.cameras.main.width - 120, 20, "img_gold").setOrigin(0,0).setScrollFactor(0).setScale(1.5);
+this.goldIcon = this.add.image(this.cameras.main.width - 120, 20, "img_gold").setOrigin(0,0).setScrollFactor(0).setScale(0.2);
 this.goldText = this.add.text(this.cameras.main.width - 15, 30, `${this.playerGold}`, {
     fontSize: "35px",
     fill: "#ffa41aff",
@@ -916,15 +971,27 @@ perdreVie() {
         if (this.petShootEvent) this.petShootEvent.remove(false);
         this.physics.pause();
         // Désactiver entités et nettoyer projectiles
+        if (this.enemy0) this.enemy0.setActive(false).setVisible(false);
         if (this.enemy1) this.enemy1.setActive(false).setVisible(false);
         if (this.enemy2) this.enemy2.setActive(false).setVisible(false);
-        if (this.enemy4) this.enemy2.setActive(false).setVisible(false);
-        if (this.enemy5) this.enemy2.setActive(false).setVisible(false);
+        if (this.enemy4) this.enemy4.setActive(false).setVisible(false);
+        if (this.enemy6) this.enemy6.setActive(false).setVisible(false);
+        if (this.enemy0) this.enemy7.setActive(false).setVisible(false);
+        if (this.enemy1) this.enemy8.setActive(false).setVisible(false);
+        if (this.enemy2) this.enemy9.setActive(false).setVisible(false);
+        if (this.enemy4) this.enemy10.setActive(false).setVisible(false);
+        if (this.enemy6) this.enemy11.setActive(false).setVisible(false);
         if (this.projectiles) this.projectiles.clear(true, true);
+        if (this.enemy0?.projectiles) this.enemy0.projectiles.clear(true, true);
         if (this.enemy1?.projectiles) this.enemy1.projectiles.clear(true, true);
         if (this.enemy2?.projectiles) this.enemy2.projectiles.clear(true, true);
         if (this.enemy4?.projectiles) this.enemy4.projectiles.clear(true, true);
-        if (this.enemy5?.projectiles) this.enemy5.projectiles.clear(true, true);
+        if (this.enemy6?.projectiles) this.enemy6.projectiles.clear(true, true);
+        if (this.enemy0?.projectiles) this.enemy7.projectiles.clear(true, true);
+        if (this.enemy1?.projectiles) this.enemy8.projectiles.clear(true, true);
+        if (this.enemy2?.projectiles) this.enemy9.projectiles.clear(true, true);
+        if (this.enemy4?.projectiles) this.enemy10.projectiles.clear(true, true);
+        if (this.enemy6?.projectiles) this.enemy11.projectiles.clear(true, true);
         if (this.player) this.player.setTint(0xff0000);
         this.add.text(400, 300, 'GAME OVER', { 
             fontSize: '32px', 

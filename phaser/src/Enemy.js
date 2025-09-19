@@ -150,10 +150,10 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   dropGold() {
     const gold = this.scene.physics.add.sprite(this.x, this.y, "img_gold");
-    gold.setScale(0.5);
+    gold.setScale(0.1);
     gold.setCollideWorldBounds(true);
 
-    gold.body.setSize(40, 40);
+    gold.body.setSize(300, 300);
     gold.body.setOffset(0, 0);
 
     this.scene.physics.add.collider(gold, this.scene.platformLayer);
