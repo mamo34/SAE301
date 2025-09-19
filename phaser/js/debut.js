@@ -24,9 +24,9 @@ export default class debut extends Phaser.Scene {
 
     this.add.image(centerX, centerY, "back1").setDepth(0);
 
-    const buttonScale = 0.4;
+    const buttonScale = 0.25;
     const offsetX = 350;
-    const offsetY = 450;
+    const offsetY = 400;
 
     // --- MENU PRINCIPAL ---
     this.menu = this.add.container(0, 0);
@@ -37,12 +37,12 @@ export default class debut extends Phaser.Scene {
     }, buttonScale);
     this.menuButtons.push(this.boutonJouer);
 
-    this.boutonControles = this.createButton(centerX + offsetX, offsetY + 100, "boutonControles", () => {
+    this.boutonControles = this.createButton(centerX + offsetX, offsetY + 125, "boutonControles", () => {
       this.showPage(this.pageControles, this.retour1);
     }, buttonScale);
     this.menuButtons.push(this.boutonControles);
 
-    this.boutonCredits = this.createButton(centerX + offsetX, offsetY + 200, "boutonCredits", () => {
+    this.boutonCredits = this.createButton(centerX + offsetX, offsetY + 250, "boutonCredits", () => {
       this.showPage(this.pageCredits, this.retour2);
     }, buttonScale);
     this.menuButtons.push(this.boutonCredits);
@@ -111,7 +111,7 @@ export default class debut extends Phaser.Scene {
   this.activeButtons.forEach((btn, i) => {
     // Si c'est un bouton retour, on garde sa taille initiale
     if (btn === this.retour1 || btn === this.retour2) {
-      btn.setScale(0.4); // taille originale
+      btn.setScale(0.3); // taille originale
     } else {
       btn.setScale(i === this.selectedIndex ? 1.2 * 0.4 : 0.4);
     }

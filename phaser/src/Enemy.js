@@ -109,6 +109,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   // --- Gestion des dégâts et récompenses ---
   takeDamage(amount = 1, killer = null) {
+    if (this.scene.invulnerable) return;
     this.health -= amount;
     if (this.health <= 0) {
       this.onDeath(killer);
