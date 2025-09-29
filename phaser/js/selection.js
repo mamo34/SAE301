@@ -62,7 +62,7 @@ export default class selection extends Phaser.Scene {
     this.load.image("cadre_vie", "./assets/barre vie.png");
     this.load.image("skills", "./assets/skills.png");
 
-    this.load.tilemapTiledJSON("map1", "./src/map1.json");
+    this.load.tilemapTiledJSON("map1", "./src/map/map1.json");
     this.load.image("tiles1", "./src/map/Background map 1 extend.png");
   this.load.image("tiles2", "./src/map/ea489fd3-6071-4143-aed7-fd1d786891b5.png");
   this.load.image("tiles3", "./src/map/36b0c958-0079-4b22-8533-efb9bb43834a (1).png");
@@ -579,25 +579,25 @@ if (this.isPause) return;
   // --- PLAYER ---
   if (this.clavier.left.isDown) {
     this.player.setVelocityX(-120);
-    this.playPlayerAnim("anim_tourne_gauche", true);
+    this.player.anims.play("anim_tourne_gauche", true);
     this.left = true;
     this.right = false;
   } else if (this.clavier.right.isDown) {
     this.player.setVelocityX(120);
-    this.playPlayerAnim("anim_tourne_droite", true);
+    this.player.anims.play("anim_tourne_droite", true);
     this.right = true;
     this.left = false;
   } else {
-    if (this.left) this.playPlayerAnim("anim_face_gauche");
-    else if (this.right) this.playPlayerAnim("anim_face_droite");
+    if (this.left) this.player.anims.play("anim_face_gauche");
+    else if (this.right) this.player.anims.play("anim_face_droite");
     this.player.setVelocityX(0);
   }
   if (this.clavier.up.isDown && this.player.body.blocked.down) {
     this.player.setVelocityY(-160);
   }
   if (!this.player.body.blocked.down) {
-  if (this.right) this.playPlayerAnim("anim_saut_droite", true);
-  else if (this.left) this.playPlayerAnim("anim_saut_gauche", true);
+  if (this.right) this.player.anims.play("anim_saut_droite", true);
+  else if (this.left) this.player.anims.play("anim_saut_gauche", true);
 }
 
 
@@ -1175,7 +1175,15 @@ shootProjectile() {
     else dirY = -1; // défaut vers le haut si rien
 
     // Crée le projectile
-    const projectile = this.projectiles.create(this.player.x, this.player.y, null);
+    // Offset vertical (positif = plus bas, négatif = plus haut)
+const offsetY = 10;
+
+const projectile = this.projectiles.create(
+    this.player.x,
+    this.player.y + offsetY,
+    null
+);
+
     projectile.setSize(8, 8); 
     projectile.setTint(0xffff00); // couleur jaune
     projectile.body.allowGravity = false;
@@ -1265,10 +1273,6 @@ attackGun() {
     this.time.delayedCall(500, () => { this.canAttack = true; });
 }
 
-playPlayerAnim(key) {
-  const suffix = (this.skills["Armes"] >= 1) ? "_arme" : "";
-  this.player.anims.play(key + suffix, true);
-}
 
 
 }
