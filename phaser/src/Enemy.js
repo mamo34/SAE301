@@ -1,11 +1,10 @@
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y, texture = "img_enemy", tint = 0xff0000, damage = 1, target, health, xpValue, goldValue) {
+  constructor(scene, x, y, texture = "img_enemy", damage = 1, target, health, xpValue, goldValue) {
     super(scene, x, y, texture);
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    this.setTint(tint);
     this.setImmovable(true);
     this.body.allowGravity = false;
 
