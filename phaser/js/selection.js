@@ -22,6 +22,12 @@ export default class selection extends Phaser.Scene {
         Survie: 0,
         Mobilité: 0
     };
+    this.weaponModes = ['melee'];
+    if (this.skills.Armes >= 1) this.weaponModes.push('gun');
+    // Pour une troisième arme plus tard :
+    // if (this.skills.Mobilité >= 4) this.weaponModes.push('jetpack');
+    this.selectedWeaponIndex = 0;
+
 
     this.maxSkillLevel = 5;
     this.skillPoints = 0; // Points disponibles à dépenser
@@ -108,7 +114,7 @@ export default class selection extends Phaser.Scene {
   const tileset8 = map.addTilesetImage("f7ab0909-1e05-4e07-b6b9-1385aefbf71a", "tiles8");
   const tileset9 = map.addTilesetImage("Background map 2 extend", "tiles9");
   const tileset10 = map.addTilesetImage("sol_meca", "tiles10");
-  const tileset11 = map.addTilesetImage("sol_mine", "tiles11");
+  const tileset11 = map.addTilesetImage("82c71d7a-b3ba-4494-b2d4-4e3449d95bdd", "tiles11");
     
     // Créer les calques
     map.createLayer("background_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
@@ -256,11 +262,13 @@ this.canAttack = true;
 this.input.keyboard.on('keydown-O', () => {
     if (!this.player || !this.canAttack) return;
 
-    if (this.attackMode === "melee") {
-        this.attackMelee();
-    } else if (this.attackMode === "gun") {
-        this.attackGun();
-    }
+    if (this.attackMode === 'melee') {
+  this.attackMelee();
+} else if (this.attackMode === 'gun' && this.skills.Armes >= 1) {
+  this.attackGun();
+}
+// Si tu ajoutes une troisième arme, ajoute un else if ici
+
 });
 
 
@@ -284,6 +292,12 @@ this.input.keyboard.on('keydown', (event) => {
         this.skillPoints--; 
         this.updateSkillUI(this.selectedSkillIndex);
     }
+    if (skill === "Armes") {
+  this.weaponModes = ['melee'];
+  if (this.skills.Armes >= 1) this.weaponModes.push('gun');
+  // Pour une troisième arme, ajoute la condition ici
+}
+
 }
 
 
@@ -546,17 +560,60 @@ this.physics.add.collider(this.projectiles, this.platformLayer, (proj) => {
     proj.destroy();
 });
 
+// Collision projectiles ↔ ennemis
+this.physics.add.overlap(this.projectiles, this.enemies, (projectile, enemy) => {
+    projectile.destroy();
+
+    // Applique les dégâts
+    if (enemy.health === undefined) enemy.health = 10; // valeur par défaut
+    enemy.health -= 1; // dégâts (tu peux mettre un autre nombre)
+
+    // Affiche le texte "-1" comme pour le pet
+    const dmgText = this.add.text(enemy.x, enemy.y - 20, "-1", {
+        fontSize: "18px",
+        fill: "#ff0000",
+        fontFamily: "Arial",
+        stroke: "#000000",
+        strokeThickness: 3
+    }).setOrigin(0.5);
+
+    this.tweens.add({
+        targets: dmgText,
+        y: dmgText.y - 30,
+        alpha: 0,
+        duration: 600,
+        ease: "Power1",
+        onComplete: () => dmgText.destroy()
+    });
+
+    // Si l'ennemi meurt
+    if (enemy.health <= 0) {
+        enemy.destroy();
+    }
+}, null, this);
+
+
 this.attackMode = "melee"; // "melee" ou "gun"
 
 // toggle avec P
 this.input.keyboard.on('keydown-P', () => {
-    this.attackMode = (this.attackMode === "melee") ? "gun" : "melee";
-    console.log("Mode :", this.attackMode);
+  this.selectedWeaponIndex = (this.selectedWeaponIndex + 1) % this.weaponModes.length;
+  this.attackMode = this.weaponModes[this.selectedWeaponIndex];
+  this.weaponModeText.setText("Mode : " + this.attackMode);
+  console.log("Mode :", this.attackMode);
 });
 
 
+this.weaponModeText = this.add.text(
+  120, // x position, à adapter selon ton interface
+  20, // y position
+  "Mode : " + this.attackMode,
+  { fontSize: "22px", fill: "#ff0", fontFamily: "Arial", fontStyle: "bold" }
+).setScrollFactor(0).setDepth(20);
 
-map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8], 0, 0);
+
+
+map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
 
     
   }
@@ -709,6 +766,17 @@ if (Phaser.Input.Keyboard.JustDown(this.keyK)
     }
   });
 }
+
+
+this.projectiles.children.each((proj) => {
+    if (proj.active) {
+        const dist = Phaser.Math.Distance.Between(proj.spawnX, proj.spawnY, proj.x, proj.y);
+        if (dist > 300) {
+            proj.destroy();
+        }
+    }
+});
+
   }
 
 
@@ -1264,7 +1332,7 @@ attackGun() {
     let projectile = this.projectiles.create(
         this.player.x + offsetX,
         this.player.y + offsetY,
-        "tir_enemy"
+        "tir_perso"
     );
 
     projectile.body.allowGravity = false;
@@ -1274,7 +1342,18 @@ attackGun() {
     // Cooldown
     this.time.delayedCall(300, () => { this.canAttack = true; });
 
-    
+if (projectile) {
+    projectile.setActive(true).setVisible(true);
+    projectile.body.enable = true;
+
+    // Donne une vitesse à la balle
+    this.physics.velocityFromRotation(this.player.rotation, 300, projectile.body.velocity);
+
+    // On enregistre la position d'origine
+    projectile.spawnX = this.player.x;
+    projectile.spawnY = this.player.y;
+}
+
 }
 
 
