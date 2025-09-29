@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="115" height="155" tilewidth="32" tileheight="32" infinite="0" nextlayerid="11" nextobjectid="1">
  <editorsettings>
-  <export target="sans titre..tmj" format="json"/>
+  <export target="map1.json" format="json"/>
  </editorsettings>
  <tileset firstgid="1" name="Background map 1 extend" tilewidth="32" tileheight="32" tilecount="2530" columns="115">
   <image source="Background map 1 extend.png" width="3680" height="720"/>
