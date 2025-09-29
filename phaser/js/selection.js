@@ -40,6 +40,11 @@ export default class selection extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 70
     });
+    this.load.spritesheet("img_perso_arme", "./assets/dudearme.png", {
+      frameWidth: 32,
+      frameHeight: 70
+    });
+
     this.load.image("img_enemy", "./assets/enemy.png");
     this.load.image("img_enemy1", "./assets/enemy1.png");
     this.load.image("img_enemy2", "./assets/enemy2.png");
@@ -58,7 +63,7 @@ export default class selection extends Phaser.Scene {
     this.load.image("skills", "./assets/skills.png");
 
     this.load.tilemapTiledJSON("map1", "./src/map1.json");
-    this.load.image("tiles1", "./src/map/Background map 1 extend.png");
+    this.load.image("tiles1", "./src/map/background_map1.png");
   this.load.image("tiles2", "./src/map/ea489fd3-6071-4143-aed7-fd1d786891b5.png");
   this.load.image("tiles3", "./src/map/36b0c958-0079-4b22-8533-efb9bb43834a (1).png");
   this.load.image("tiles4", "./src/map/9ad85738-bd94-4c71-ad80-97265cec83d5.png");
@@ -179,6 +184,40 @@ this.player.setData('invulnerable', false);
       });
 
 
+      // Animations armées
+      this.anims.create({
+        key: "anim_tourne_gauche_arme",
+        frames: this.anims.generateFrameNumbers("img_perso_arme", { start: 0, end: 4 }),
+        frameRate: 10,
+        repeat: -1
+      });
+      this.anims.create({
+        key: "anim_face_gauche_arme",
+        frames: [{ key: "img_perso_arme", frame: 5 }],
+        frameRate: 10
+      });
+      this.anims.create({
+        key: "anim_face_droite_arme",
+        frames: [{ key: "img_perso_arme", frame: 6 }],
+        frameRate: 10
+      });
+      this.anims.create({
+        key: "anim_tourne_droite_arme",
+        frames: this.anims.generateFrameNumbers("img_perso_arme", { start: 7, end: 11 }),
+        frameRate: 10,
+        repeat: -1
+      });
+      this.anims.create({
+        key: "anim_saut_droite_arme",
+        frames: [{ key: "img_perso_arme", frame: 12 }],
+        frameRate: 10
+      });
+      this.anims.create({
+        key: "anim_saut_gauche_arme",
+        frames: [{ key: "img_perso_arme", frame: 13 }],
+        frameRate: 10
+      });
+
 
 
       this.anims.create({
@@ -210,63 +249,13 @@ this.canAttack = true;
 this.input.keyboard.on('keydown-O', () => {
     if (!this.player || !this.canAttack) return;
 
-    this.canAttack = false; // bloquer le spam
-
-    // Largeur et hauteur de la hitbox devant le joueur
-    const hitboxWidth = 64;
-    const hitboxHeight = 40;
-
-    // Positionner la hitbox devant selon la direction
-    let offsetX = this.right ? 50 : this.left ? -50 : 0;
-    let offsetY = 0;
-
-    const hitbox = this.add.rectangle(
-        this.player.x + offsetX,
-        this.player.y + offsetY,
-        hitboxWidth,
-        hitboxHeight,
-        0xff0000, // debug (rouge transparent)
-        0.3
-    );
-    this.physics.add.existing(hitbox);
-    hitbox.body.allowGravity = false;
-
-    // Flag interne → éviter plusieurs coups sur un même appui
-    let hitRegistered = false;
-
-    // Détecter les ennemis touchés
-    this.physics.add.overlap(hitbox, this.enemies, (hb, enemy) => {
-        if (!hitRegistered && enemy && enemy.active && enemy.takeDamage) {
-            hitRegistered = true; // empêcher autres overlaps
-            enemy.takeDamage(this.degatPlayerCorpsAcorps, this.player);
-
-            // Texte flottant "Slash!"
-            let slashText = this.add.text(enemy.x, enemy.y - 40, "Slash!", {
-                fontSize: "14px",
-                fill: "#ff0000",
-                fontFamily: "Arial"
-            }).setOrigin(0.5).setDepth(10);
-
-            this.tweens.add({
-                targets: slashText,
-                alpha: 0,
-                y: slashText.y - 20,
-                duration: 500,
-                onComplete: () => slashText.destroy()
-            });
-        }
-    });
-
-    // Détruire la hitbox après 200ms
-    this.time.delayedCall(200, () => {
-        hitbox.destroy();
-    });
-
-    // Cooldown (0.7s)
-    this.time.delayedCall(700, () => {
-        this.canAttack = true;
-    });
+    if (this.attackMode === "melee") {
+        this.attackMelee();
+    } else if (this.attackMode === "gun") {
+        this.attackGun();
+    }
 });
+
 
 
 
@@ -397,133 +386,14 @@ this.physics.add.collider(this.enemy11, this.platformLayer);
     if (this.enemy10.startPatrol) this.enemy10.startPatrol(800, 1200, 70);
     if (this.enemy11.startPatrol) this.enemy11.startPatrol(1600, 2500, 70);
 
-    // PET
-    this.pet = this.physics.add.sprite(this.player.x + 50, this.player.y, "img_perso");
-    this.pet.body.allowGravity = false;
-    this.petMode = "follow"; // "follow" = oscillation autour du joueur, "attack" = attaque ennemi
-    this.petDamage = 1;      // damage per hit
-    this.petRadius = 32;     // attack distance (px)
-    this.petInterval = 500; // ms between damage ticks
-
-
-    // PROJECTILES DU PET
-    this.projectiles = this.physics.add.group(); // <--- C'est important !
-
+    
+  
+  
     // Créer un groupe avec les ennemis existants
 this.enemies = this.physics.add.group();
 [this.enemy0, this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11].forEach(e => {
   if (e) this.enemies.add(e);
 });
-
-// Overlap sécurisée
-this.physics.add.overlap(this.projectiles, this.enemies, (proj, en) => {
-  if (en && en.takeDamage) {
-    en.takeDamage(1, this.pet);
-  }
-  if (proj && proj.destroy) proj.destroy();
-});
-
-
-
-    // Tir automatique du pet avec délai aléatoire 2s → 7s
-this.petShootEvent = this.time.addEvent({
-  delay: Phaser.Math.Between(2000, 7000),
-  loop: true,
-  callback: () => {
-    // Chercher le plus proche ennemi actif
-    let target = null;
-    let minDist = 1000;
-    [this.enemy0, this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11].forEach(enemy => {
-      if (enemy && enemy.active) {
-        const dx = enemy.x - this.pet.x;
-        const dy = enemy.y - this.pet.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < minDist) {
-          minDist = dist;
-          target = enemy;
-        }
-      }
-    });
-
-    if (target) {
-      // Bloquer le pet temporairement
-      const originalVelocityX = this.pet.body.velocity.x;
-      const originalVelocityY = this.pet.body.velocity.y;
-      this.pet.body.setVelocity(0);
-
-      // Calculer angle et position de spawn du projectile
-      const angle = Phaser.Math.Angle.Between(this.pet.x, this.pet.y, target.x, target.y);
-      const offset = 20; // devant le pet
-      const spawnX = this.pet.x + Math.cos(angle) * offset;
-      const spawnY = this.pet.y + Math.sin(angle) * offset;
-
-      // Créer le projectile
-      const bullet = this.projectiles.create(spawnX, spawnY, "img_perso");
-      bullet.setTint(0xffff00);
-      bullet.setScale(0.5);
-      this.physics.moveTo(bullet, target.x, target.y, 200);
-
-      // Reprendre le mouvement du pet après 0.15s
-      this.time.delayedCall(150, () => {
-        this.pet.body.setVelocity(originalVelocityX, originalVelocityY);
-      });
-    }
-
-    // Réajuster le délai
-    this.petShootEvent.delay = Phaser.Math.Between(2000, 7000);
-  }
-});
-
-// initialize per-enemy overlap state
-this.enemies.getChildren().forEach(enemy => {
-  enemy.isPetOverlapping = false;
-  enemy.petDamageEvent = null;
-});
-
-// When the pet first overlaps an enemy, start a repeating damage event (if none yet)
-this.physics.add.overlap(this.pet, this.enemies, (pet, enemy) => {
-  // if no damage event is running for this enemy, create one
-  if (!enemy.petDamageEvent) {
-    const DAMAGE = this.petDamage;      // damage per tick
-    const INTERVAL = this.petInterval; // ms between ticks (change to your X seconds)
-
-    enemy.petDamageEvent = this.time.addEvent({
-      delay: INTERVAL,
-      loop: true,
-      callback: () => {
-        // safety checks: if enemy died, remove the event
-        if (!enemy || !enemy.active) {
-          if (enemy && enemy.petDamageEvent) {
-            enemy.petDamageEvent.remove(false);
-            enemy.petDamageEvent = null;
-          }
-          return;
-        }
-        const dist = Phaser.Math.Distance.Between(this.pet.x, this.pet.y, enemy.x, enemy.y);
-if (dist <= this.petRadius) {
-        if (enemy.takeDamage) enemy.takeDamage(DAMAGE, this.pet);
-        // show floating damage text
-const dmgText = this.add.text(enemy.x, enemy.y - 20, `-${this.petDamage}`, {
-    fontSize: "14px",
-    fill: "#ff4444",
-    fontFamily: "Arial"
-}).setOrigin(0.5).setDepth(10);
-
-this.tweens.add({
-    targets: dmgText,
-    y: dmgText.y - 30,
-    alpha: 0,
-    duration: 600,
-    onComplete: () => dmgText.destroy()
-});
-      }}
-    });
-  }
-
-  // mark that we are currently overlapping this enemy
-  enemy.isPetOverlapping = true;
-});
-
 
 this.pauseKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L);
 this.isPause = false;
@@ -661,6 +531,21 @@ this.keyI.on('down', () => {
     }
 });
 
+this.projectiles = this.physics.add.group({
+    classType: Phaser.Physics.Arcade.Image,
+    runChildUpdate: true
+});
+this.physics.add.collider(this.projectiles, this.platformLayer, (proj) => {
+    proj.destroy();
+});
+
+this.attackMode = "melee"; // "melee" ou "gun"
+
+// toggle avec P
+this.input.keyboard.on('keydown-P', () => {
+    this.attackMode = (this.attackMode === "melee") ? "gun" : "melee";
+    console.log("Mode :", this.attackMode);
+});
 
 
 
@@ -694,25 +579,25 @@ if (this.isPause) return;
   // --- PLAYER ---
   if (this.clavier.left.isDown) {
     this.player.setVelocityX(-120);
-    this.player.anims.play("anim_tourne_gauche", true);
+    this.playPlayerAnim("anim_tourne_gauche", true);
     this.left = true;
     this.right = false;
   } else if (this.clavier.right.isDown) {
     this.player.setVelocityX(120);
-    this.player.anims.play("anim_tourne_droite", true);
+    this.playPlayerAnim("anim_tourne_droite", true);
     this.right = true;
     this.left = false;
   } else {
-    if (this.left) this.player.anims.play("anim_face_gauche");
-    else if (this.right) this.player.anims.play("anim_face_droite");
+    if (this.left) this.playPlayerAnim("anim_face_gauche");
+    else if (this.right) this.playPlayerAnim("anim_face_droite");
     this.player.setVelocityX(0);
   }
   if (this.clavier.up.isDown && this.player.body.blocked.down) {
     this.player.setVelocityY(-160);
   }
   if (!this.player.body.blocked.down) {
-  if (this.right) this.player.anims.play("anim_saut_droite", true);
-  else if (this.left) this.player.anims.play("anim_saut_gauche", true);
+  if (this.right) this.playPlayerAnim("anim_saut_droite", true);
+  else if (this.left) this.playPlayerAnim("anim_saut_gauche", true);
 }
 
 
@@ -736,7 +621,12 @@ if (Phaser.Input.Keyboard.JustDown(this.keyK)
 
 
   // --- PET ---
-  if (!this.pet || !this.pet.body) return;
+
+  if (this.skills["Survie"] === 1 && !this.pet) {
+  this.spawnPet();
+}
+
+  if (this.skills["Survie"] >= 1) {
 
   const speed = 120;
   const detectionRadius = 150;
@@ -812,6 +702,7 @@ if (Phaser.Input.Keyboard.JustDown(this.keyK)
     }
   });
 }
+  }
 
 
   updatePlayerHealthBar() {
@@ -884,6 +775,8 @@ updatePlayerXPBar() {
 updateSkillUI(index) {
     const skill = this.skillKeys[index];
 
+    
+
     // UI permanente (en bas)
     if (this.skillUIText && this.skillUIText[index])
         this.skillUIText[index].setText(`${skill}: ${this.skills[skill]} / ${this.maxSkillLevel}`);
@@ -895,6 +788,15 @@ updateSkillUI(index) {
         this.skillMenuTexts[index].setText(`${skill}: ${this.skills[skill]} / ${this.maxSkillLevel}`);
     if (this.skillPointsText)
         this.skillPointsText.setText(`Points à dépenser: ${this.skillPoints}`);
+
+
+
+
+
+    if (skill === "Armes" && this.skills["Armes"] >= 1) {
+    this.player.setTexture("img_perso_arme");
+}
+
 }
 
 
@@ -1009,6 +911,131 @@ perdreVie() {
 
     
 }
+
+spawnPet() {
+  // PET
+    this.pet = this.physics.add.sprite(this.player.x + 50, this.player.y, "img_perso");
+    this.pet.body.allowGravity = false;
+    this.petMode = "follow"; // "follow" = oscillation autour du joueur, "attack" = attaque ennemi
+    this.petDamage = 1;      // damage per hit
+    this.petRadius = 32;     // attack distance (px)
+    this.petInterval = 500; // ms between damage ticks
+
+
+    // PROJECTILES DU PET
+    this.projectiles = this.physics.add.group(); // <--- C'est important !
+
+
+// Overlap sécurisée
+this.physics.add.overlap(this.projectiles, this.enemies, (proj, en) => {
+  if (en && en.takeDamage) {
+    en.takeDamage(1, this.pet);
+  }
+  if (proj && proj.destroy) proj.destroy();
+});
+
+
+
+    // Tir automatique du pet avec délai aléatoire 2s → 7s
+this.petShootEvent = this.time.addEvent({
+  delay: Phaser.Math.Between(2000, 7000),
+  loop: true,
+  callback: () => {
+    // Chercher le plus proche ennemi actif
+    let target = null;
+    let minDist = 1000;
+    [this.enemy0, this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11].forEach(enemy => {
+      if (enemy && enemy.active) {
+        const dx = enemy.x - this.pet.x;
+        const dy = enemy.y - this.pet.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < minDist) {
+          minDist = dist;
+          target = enemy;
+        }
+      }
+    });
+
+    if (target) {
+      // Bloquer le pet temporairement
+      const originalVelocityX = this.pet.body.velocity.x;
+      const originalVelocityY = this.pet.body.velocity.y;
+      this.pet.body.setVelocity(0);
+
+      // Calculer angle et position de spawn du projectile
+      const angle = Phaser.Math.Angle.Between(this.pet.x, this.pet.y, target.x, target.y);
+      const offset = 20; // devant le pet
+      const spawnX = this.pet.x + Math.cos(angle) * offset;
+      const spawnY = this.pet.y + Math.sin(angle) * offset;
+
+      // Créer le projectile
+      const bullet = this.projectiles.create(spawnX, spawnY, "img_perso");
+      bullet.setTint(0xffff00);
+      bullet.setScale(0.5);
+      this.physics.moveTo(bullet, target.x, target.y, 200);
+
+      // Reprendre le mouvement du pet après 0.15s
+      this.time.delayedCall(150, () => {
+        this.pet.body.setVelocity(originalVelocityX, originalVelocityY);
+      });
+    }
+
+    // Réajuster le délai
+    this.petShootEvent.delay = Phaser.Math.Between(2000, 7000);
+  }
+});
+
+// initialize per-enemy overlap state
+this.enemies.getChildren().forEach(enemy => {
+  enemy.isPetOverlapping = false;
+  enemy.petDamageEvent = null;
+});
+
+// When the pet first overlaps an enemy, start a repeating damage event (if none yet)
+this.physics.add.overlap(this.pet, this.enemies, (pet, enemy) => {
+  // if no damage event is running for this enemy, create one
+  if (!enemy.petDamageEvent) {
+    const DAMAGE = this.petDamage;      // damage per tick
+    const INTERVAL = this.petInterval; // ms between ticks (change to your X seconds)
+
+    enemy.petDamageEvent = this.time.addEvent({
+      delay: INTERVAL,
+      loop: true,
+      callback: () => {
+        // safety checks: if enemy died, remove the event
+        if (!enemy || !enemy.active) {
+          if (enemy && enemy.petDamageEvent) {
+            enemy.petDamageEvent.remove(false);
+            enemy.petDamageEvent = null;
+          }
+          return;
+        }
+        const dist = Phaser.Math.Distance.Between(this.pet.x, this.pet.y, enemy.x, enemy.y);
+if (dist <= this.petRadius) {
+        if (enemy.takeDamage) enemy.takeDamage(DAMAGE, this.pet);
+        // show floating damage text
+const dmgText = this.add.text(enemy.x, enemy.y - 20, `-${this.petDamage}`, {
+    fontSize: "14px",
+    fill: "#ff4444",
+    fontFamily: "Arial"
+}).setOrigin(0.5).setDepth(10);
+
+this.tweens.add({
+    targets: dmgText,
+    y: dmgText.y - 30,
+    alpha: 0,
+    duration: 600,
+    onComplete: () => dmgText.destroy()
+});
+      }}
+    });
+  }
+
+  // mark that we are currently overlapping this enemy
+  enemy.isPetOverlapping = true;
+});
+}
+
 
 
 
@@ -1137,6 +1164,111 @@ fadeOutAndTeleport(duration, targetX, targetY) {
 }
 
 
+shootProjectile() {
+    if (!this.player) return;
+
+    let dirX = 0;
+    let dirY = 0;
+
+    if (this.right) dirX = 1;
+    else if (this.left) dirX = -1;
+    else dirY = -1; // défaut vers le haut si rien
+
+    // Crée le projectile
+    const projectile = this.projectiles.create(this.player.x, this.player.y, null);
+    projectile.setSize(8, 8); 
+    projectile.setTint(0xffff00); // couleur jaune
+    projectile.body.allowGravity = false;
+
+    // Vitesse
+    const speed = 200;
+    projectile.setVelocity(dirX * speed, dirY * speed);
+
+    // Distance max
+    this.time.delayedCall(200, () => {
+        if (projectile.active) projectile.destroy();
+    });
+
+    // Collision avec ennemis
+    this.physics.add.overlap(projectile, this.enemies, (proj, enemy) => {
+        if (enemy && enemy.takeDamage) {
+            enemy.takeDamage(1, this.player); // 1 dégât
+            proj.destroy();
+        }
+    });
+}
+
+attackMelee() {
+    this.canAttack = false;
+
+    const hitboxWidth = 64;
+    const hitboxHeight = 40;
+    let offsetX = this.right ? 50 : this.left ? -50 : 0;
+
+    const hitbox = this.add.rectangle(
+        this.player.x + offsetX,
+        this.player.y,
+        hitboxWidth,
+        hitboxHeight,
+        0xff0000,
+        0.3
+    );
+    this.physics.add.existing(hitbox);
+    hitbox.body.allowGravity = false;
+
+    let hitRegistered = false;
+    this.physics.add.overlap(hitbox, this.enemies, (hb, enemy) => {
+        if (!hitRegistered && enemy && enemy.active && enemy.takeDamage) {
+            hitRegistered = true;
+            enemy.takeDamage(this.degatPlayerCorpsAcorps, this.player);
+
+            let slashText = this.add.text(enemy.x, enemy.y - 40, "Slash!", {
+                fontSize: "14px",
+                fill: "#ff0000",
+                fontFamily: "Arial"
+            }).setOrigin(0.5).setDepth(10);
+
+            this.tweens.add({
+                targets: slashText,
+                alpha: 0,
+                y: slashText.y - 20,
+                duration: 500,
+                onComplete: () => slashText.destroy()
+            });
+        }
+    });
+
+    this.time.delayedCall(200, () => hitbox.destroy());
+    this.time.delayedCall(700, () => { this.canAttack = true; });
+}
+
+attackGun() {
+    this.canAttack = false;
+
+    const projectile = this.physics.add.image(this.player.x, this.player.y - 20, "tir_enemy");
+    projectile.setVelocityX(this.right ? 300 : -300); // vitesse selon direction
+    projectile.setCollideWorldBounds(true);
+    projectile.body.allowGravity = false;
+
+    // overlap avec ennemis
+    this.physics.add.overlap(projectile, this.enemies, (proj, enemy) => {
+        if (enemy.active && enemy.takeDamage) {
+            enemy.takeDamage(3, this.player); // dégâts du gun
+            proj.destroy();
+        }
+    });
+
+    // détruire après 2s
+    this.time.delayedCall(2000, () => { projectile.destroy(); });
+
+    // cooldown
+    this.time.delayedCall(500, () => { this.canAttack = true; });
+}
+
+playPlayerAnim(key) {
+  const suffix = (this.skills["Armes"] >= 1) ? "_arme" : "";
+  this.player.anims.play(key + suffix, true);
+}
 
 
 }
