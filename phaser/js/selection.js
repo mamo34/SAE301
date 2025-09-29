@@ -63,14 +63,18 @@ export default class selection extends Phaser.Scene {
     this.load.image("skills", "./assets/skills.png");
 
     this.load.tilemapTiledJSON("map1", "./src/map/map1.json");
-    this.load.image("tiles1", "./src/map/Background map 1 extend.png");
-  this.load.image("tiles2", "./src/map/ea489fd3-6071-4143-aed7-fd1d786891b5.png");
-  this.load.image("tiles3", "./src/map/36b0c958-0079-4b22-8533-efb9bb43834a (1).png");
-  this.load.image("tiles4", "./src/map/9ad85738-bd94-4c71-ad80-97265cec83d5.png");
-  this.load.image("tiles5", "./src/map/e517bb53-ba6b-4c48-ab4b-31422e1ece67.png");
-  this.load.image("tiles6", "./src/map/Background map 3 extend.png");
+    this.load.image("tiles1", "./src/map/background_1.png");
+  this.load.image("tiles2", "./src/map/sol_prairie.png");
+  this.load.image("tiles3", "./src/map/vegetation.png");
+  this.load.image("tiles4", "./src/map/bat_1.png");
+  this.load.image("tiles5", "./src/map/bat_2.png");
+  this.load.image("tiles6", "./src/map/background_3.png");
   this.load.image("tiles7", "./src/map/dirigeable.png");
-  this.load.image("tiles8", "./src/map/f7ab0909-1e05-4e07-b6b9-1385aefbf71a.png");
+  this.load.image("tiles8", "./src/map/ruine.png");
+  this.load.image("tiles9", "./src/map/background_2.png");
+  this.load.image("tiles10", "./src/map/sol_meca.png");
+  this.load.image("tiles11", "./src/map/sol_mine.png");
+
 
 
 
@@ -1175,15 +1179,7 @@ shootProjectile() {
     else dirY = -1; // défaut vers le haut si rien
 
     // Crée le projectile
-    // Offset vertical (positif = plus bas, négatif = plus haut)
-const offsetY = 10;
-
-const projectile = this.projectiles.create(
-    this.player.x,
-    this.player.y + offsetY,
-    null
-);
-
+    const projectile = this.projectiles.create(this.player.x, this.player.y + 50, null);
     projectile.setSize(8, 8); 
     projectile.setTint(0xffff00); // couleur jaune
     projectile.body.allowGravity = false;
@@ -1251,27 +1247,33 @@ attackMelee() {
 }
 
 attackGun() {
+    if (!this.canAttack) return;
+
     this.canAttack = false;
 
-    const projectile = this.physics.add.image(this.player.x, this.player.y - 20, "tir_enemy");
-    projectile.setVelocityX(this.right ? 300 : -300); // vitesse selon direction
-    projectile.setCollideWorldBounds(true);
+    // Décalage vertical : +10 ou +20 selon la taille du sprite
+    let offsetY = 15;
+
+    // Décalage horizontal selon direction
+    let offsetX = this.right ? 20 : -20;
+
+    // Création du projectile un peu plus bas que le joueur
+    let projectile = this.projectiles.create(
+        this.player.x + offsetX,
+        this.player.y + offsetY,
+        "tir_enemy"
+    );
+
     projectile.body.allowGravity = false;
 
-    // overlap avec ennemis
-    this.physics.add.overlap(projectile, this.enemies, (proj, enemy) => {
-        if (enemy.active && enemy.takeDamage) {
-            enemy.takeDamage(3, this.player); // dégâts du gun
-            proj.destroy();
-        }
-    });
+    projectile.setVelocityX(this.right ? 400 : -400);
 
-    // détruire après 2s
-    this.time.delayedCall(2000, () => { projectile.destroy(); });
+    // Cooldown
+    this.time.delayedCall(300, () => { this.canAttack = true; });
 
-    // cooldown
-    this.time.delayedCall(500, () => { this.canAttack = true; });
+    
 }
+
 
 
 
