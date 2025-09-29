@@ -1030,7 +1030,7 @@
         {
          "columns":115,
          "firstgid":1,
-         "image":"map\/Background map 1 extend.png",
+         "image":"background_1.png",
          "imageheight":720,
          "imagewidth":3680,
          "margin":0,
@@ -1043,7 +1043,7 @@
         {
          "columns":48,
          "firstgid":2531,
-         "image":"map\/ea489fd3-6071-4143-aed7-fd1d786891b5.png",
+         "image":"sol_prairie.png",
          "imageheight":1024,
          "imagewidth":1536,
          "margin":0,
@@ -1156,7 +1156,7 @@
         {
          "columns":46,
          "firstgid":4067,
-         "image":"map\/36b0c958-0079-4b22-8533-efb9bb43834a (1).png",
+         "image":"vegetation.png",
          "imageheight":384,
          "imagewidth":1498,
          "margin":0,
@@ -1169,7 +1169,7 @@
         {
          "columns":22,
          "firstgid":4619,
-         "image":"map\/9ad85738-bd94-4c71-ad80-97265cec83d5.png",
+         "image":"bat_1.png",
          "imageheight":448,
          "imagewidth":704,
          "margin":0,
@@ -1182,7 +1182,7 @@
         {
          "columns":26,
          "firstgid":4927,
-         "image":"map\/e517bb53-ba6b-4c48-ab4b-31422e1ece67.png",
+         "image":"bat_2.png",
          "imageheight":448,
          "imagewidth":832,
          "margin":0,
@@ -1195,7 +1195,7 @@
         {
          "columns":115,
          "firstgid":5291,
-         "image":"map\/Background map 3 extend.png",
+         "image":"background_3.png",
          "imageheight":720,
          "imagewidth":3680,
          "margin":0,
@@ -1208,7 +1208,7 @@
         {
          "columns":20,
          "firstgid":7821,
-         "image":"map\/dirigeable.png",
+         "image":"dirigeable.png",
          "imageheight":480,
          "imagewidth":640,
          "margin":0,
@@ -1221,7 +1221,7 @@
         {
          "columns":20,
          "firstgid":8121,
-         "image":"map\/f7ab0909-1e05-4e07-b6b9-1385aefbf71a.png",
+         "image":"ruine.png",
          "imageheight":512,
          "imagewidth":650,
          "margin":0,
@@ -1234,7 +1234,7 @@
         {
          "columns":12,
          "firstgid":8441,
-         "image":"map\/sol_meca.png",
+         "image":"sol_meca.png",
          "imageheight":256,
          "imagewidth":384,
          "margin":0,
@@ -1247,7 +1247,7 @@
         {
          "columns":115,
          "firstgid":8537,
-         "image":"map\/Background map 2 extend.png",
+         "image":"background_2.png",
          "imageheight":720,
          "imagewidth":3680,
          "margin":0,
@@ -1260,7 +1260,7 @@
         {
          "columns":12,
          "firstgid":11067,
-         "image":"map\/82c71d7a-b3ba-4494-b2d4-4e3449d95bdd.png",
+         "image":"sol_mine.png",
          "imageheight":256,
          "imagewidth":384,
          "margin":0,

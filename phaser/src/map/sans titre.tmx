@@ -4,10 +4,10 @@
   <export target="../map1.json" format="json"/>
  </editorsettings>
  <tileset firstgid="1" name="Background map 1 extend" tilewidth="32" tileheight="32" tilecount="2530" columns="115">
-  <image source="Background map 1 extend.png" width="3680" height="720"/>
+  <image source="background_1.png" width="3680" height="720"/>
  </tileset>
  <tileset firstgid="2531" name="ea489fd3-6071-4143-aed7-fd1d786891b5" tilewidth="32" tileheight="32" tilecount="1536" columns="48">
-  <image source="ea489fd3-6071-4143-aed7-fd1d786891b5.png" width="1536" height="1024"/>
+  <image source="sol_prairie.png" width="1536" height="1024"/>
   <tile id="146">
    <properties>
     <property name="dur" type="bool" value="true"/>
@@ -65,31 +65,31 @@
   </tile>
  </tileset>
  <tileset firstgid="4067" name="36b0c958-0079-4b22-8533-efb9bb43834a (1)" tilewidth="32" tileheight="32" tilecount="552" columns="46">
-  <image source="36b0c958-0079-4b22-8533-efb9bb43834a (1).png" width="1498" height="384"/>
+  <image source="vegetation.png" width="1498" height="384"/>
  </tileset>
  <tileset firstgid="4619" name="9ad85738-bd94-4c71-ad80-97265cec83d5" tilewidth="32" tileheight="32" tilecount="308" columns="22">
-  <image source="9ad85738-bd94-4c71-ad80-97265cec83d5.png" width="704" height="448"/>
+  <image source="bat_1.png" width="704" height="448"/>
  </tileset>
  <tileset firstgid="4927" name="e517bb53-ba6b-4c48-ab4b-31422e1ece67" tilewidth="32" tileheight="32" tilecount="364" columns="26">
-  <image source="e517bb53-ba6b-4c48-ab4b-31422e1ece67.png" width="832" height="448"/>
+  <image source="bat_2.png" width="832" height="448"/>
  </tileset>
  <tileset firstgid="5291" name="Background map 3 extend" tilewidth="32" tileheight="32" tilecount="2530" columns="115">
-  <image source="Background map 3 extend.png" width="3680" height="720"/>
+  <image source="background_3.png" width="3680" height="720"/>
  </tileset>
  <tileset firstgid="7821" name="dirigeable" tilewidth="32" tileheight="32" tilecount="300" columns="20">
   <image source="dirigeable.png" width="640" height="480"/>
  </tileset>
  <tileset firstgid="8121" name="f7ab0909-1e05-4e07-b6b9-1385aefbf71a" tilewidth="32" tileheight="32" tilecount="320" columns="20">
-  <image source="f7ab0909-1e05-4e07-b6b9-1385aefbf71a.png" width="650" height="512"/>
+  <image source="ruine.png" width="650" height="512"/>
  </tileset>
  <tileset firstgid="8441" name="sol_meca" tilewidth="32" tileheight="32" tilecount="96" columns="12">
   <image source="sol_meca.png" width="384" height="256"/>
  </tileset>
  <tileset firstgid="8537" name="Background map 2 extend" tilewidth="32" tileheight="32" tilecount="2530" columns="115">
-  <image source="Background map 2 extend.png" width="3680" height="720"/>
+  <image source="background_2.png" width="3680" height="720"/>
  </tileset>
  <tileset firstgid="11067" name="82c71d7a-b3ba-4494-b2d4-4e3449d95bdd" tilewidth="32" tileheight="32" tilecount="96" columns="12">
-  <image source="82c71d7a-b3ba-4494-b2d4-4e3449d95bdd.png" width="384" height="256"/>
+  <image source="sol_mine.png" width="384" height="256"/>
  </tileset>
  <layer id="1" name="background_layer" width="115" height="155">
   <data encoding="csv">
