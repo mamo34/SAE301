@@ -106,19 +106,22 @@ export default class selection extends Phaser.Scene {
   const tileset6 = map.addTilesetImage("Background map 3 extend", "tiles6");
   const tileset7 = map.addTilesetImage("dirigeable", "tiles7");
   const tileset8 = map.addTilesetImage("f7ab0909-1e05-4e07-b6b9-1385aefbf71a", "tiles8");
+  const tileset9 = map.addTilesetImage("Background map 2 extend", "tiles9");
+  const tileset10 = map.addTilesetImage("sol_meca", "tiles10");
+  const tileset11 = map.addTilesetImage("sol_mine", "tiles11");
     
     // Créer les calques
-    map.createLayer("background_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8], 0, 0);
-    map.createLayer("background_2_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8], 0, 0);
+    map.createLayer("background_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
+    map.createLayer("background_2_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
     this.platformLayer = map.createLayer(
   "platform_layer",
-  [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8],
+  [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11],
   0,
   0
 );
 this.platformLayer.setCollisionByProperty({ dur: true });
-map.createLayer("ladder_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8], 0, 0);
-    map.createLayer("decoration_back_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8], 0, 0);
+map.createLayer("ladder_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
+    map.createLayer("decoration_back_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
     
     // Activer collisions sur tuiles ayant la propriété { dur: true }
     this.platformLayer.setCollisionByProperty({ dur: true });
