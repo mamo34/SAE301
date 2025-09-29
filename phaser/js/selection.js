@@ -46,7 +46,7 @@ export default class selection extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 70
     });
-    this.load.spritesheet("img_perso_arme", "./assets/dudearme.png", {
+    this.load.spritesheet("img_perso_arme", "./assets/dudegun.png", {
       frameWidth: 32,
       frameHeight: 70
     });
@@ -54,7 +54,10 @@ export default class selection extends Phaser.Scene {
     this.load.image("img_enemy", "./assets/enemy.png");
     this.load.image("img_enemy1", "./assets/enemy1.png");
     this.load.image("img_enemy2", "./assets/enemy2.png");
-    this.load.image("img_enemy3", "./assets/enemy3.png");
+    this.load.spritesheet("img_enemy3", "./assets/enemy3.png", {
+      frameWidth: 32,
+      frameHeight: 32
+    });
 
     this.load.image("tir_enemy", "./assets/tirenemy.png");
 
@@ -137,6 +140,7 @@ map.createLayer("ladder_layer", [tileset1, tileset2, tileset3, tileset4, tileset
 this.player = this.physics.add.sprite(100, 700, "img_perso");
 this.player.setBounce(0.2);
 this.player.setCollideWorldBounds(false);
+this.player.hasWeapon = false;
 
 // Créer un mur invisible à gauche et droite
 const leftWall = this.add.rectangle(0, map.heightInPixels / 2, -2, map.heightInPixels);
@@ -245,7 +249,55 @@ this.player.setData('invulnerable', false);
         frameRate: 20,
         repeat: -1
       });
+
+
+      
     }
+
+    //ANIMATIONS ENNEMIS
+
+    //SPIDER
+  // Côté droit
+this.anims.create({
+  key: "spider_idle_right",
+  frames: [ { key: "img_enemy3", frame: 0 } ],
+  frameRate: 1,
+  repeat: -1
+});
+this.anims.create({
+  key: "spider_crouch_right",
+  frames: [ { key: "img_enemy3", frame: 1 } ],
+  frameRate: 1,
+  repeat: -1
+});
+this.anims.create({
+  key: "spider_jump_right",
+  frames: [ { key: "img_enemy3", frame: 2 } ],
+  frameRate: 1,
+  repeat: -1
+});
+
+// Côté gauche
+this.anims.create({
+  key: "spider_idle_left",
+  frames: [ { key: "img_enemy3", frame: 5 } ],  // frame 6
+  frameRate: 1,
+  repeat: -1
+});
+this.anims.create({
+  key: "spider_crouch_left",
+  frames: [ { key: "img_enemy3", frame: 4 } ],  // frame 5
+  frameRate: 1,
+  repeat: -1
+});
+this.anims.create({
+  key: "spider_jump_left",
+  frames: [ { key: "img_enemy3", frame: 3 } ],  // frame 4
+  frameRate: 1,
+  repeat: -1
+});
+
+
 
     // CLAVIER
     this.clavier = this.input.keyboard.createCursorKeys();
@@ -613,6 +665,9 @@ this.weaponModeText = this.add.text(
 
 
 
+
+
+
 map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
 
     
@@ -642,26 +697,71 @@ if (this.isPause) return;
 
   // --- PLAYER ---
   if (this.clavier.left.isDown) {
-    this.player.setVelocityX(-120);
-    this.player.anims.play("anim_tourne_gauche", true);
-    this.left = true;
-    this.right = false;
-  } else if (this.clavier.right.isDown) {
-    this.player.setVelocityX(120);
-    this.player.anims.play("anim_tourne_droite", true);
-    this.right = true;
-    this.left = false;
+  this.player.setVelocityX(-120);
+  if (this.player.hasWeapon) {
+    this.player.anims.play("anim_tourne_gauche_arme", true);
   } else {
-    if (this.left) this.player.anims.play("anim_face_gauche");
-    else if (this.right) this.player.anims.play("anim_face_droite");
-    this.player.setVelocityX(0);
+    this.player.anims.play("anim_tourne_gauche", true);
   }
-  if (this.clavier.up.isDown && this.player.body.blocked.down) {
-    this.player.setVelocityY(-160);
+  this.left = true;
+  this.right = false;
+} else if (this.clavier.right.isDown) {
+  this.player.setVelocityX(120);
+  if (this.player.hasWeapon) {
+    this.player.anims.play("anim_tourne_droite_arme", true);
+  } else {
+    this.player.anims.play("anim_tourne_droite", true);
   }
-  if (!this.player.body.blocked.down) {
-  if (this.right) this.player.anims.play("anim_saut_droite", true);
-  else if (this.left) this.player.anims.play("anim_saut_gauche", true);
+  this.right = true;
+  this.left = false;
+} else {
+  if (this.left) {
+    if (this.player.hasWeapon) {
+      this.player.anims.play("anim_face_gauche_arme");
+    } else {
+      this.player.anims.play("anim_face_gauche");
+    }
+  } else if (this.right) {
+    if (this.player.hasWeapon) {
+      this.player.anims.play("anim_face_droite_arme");
+    } else {
+      this.player.anims.play("anim_face_droite");
+    }
+  }
+  this.player.setVelocityX(0);
+}
+
+if (!this.player.body.blocked.down) {
+  if (this.right) {
+    if (this.player.hasWeapon) {
+      this.player.anims.play("anim_saut_droite_arme", true);
+    } else {
+      this.player.anims.play("anim_saut_droite", true);
+    }
+  } else if (this.left) {
+    if (this.player.hasWeapon) {
+      this.player.anims.play("anim_saut_gauche_arme", true);
+    } else {
+      this.player.anims.play("anim_saut_gauche", true);
+    }
+  }
+}
+if (this.clavier.up.isDown && this.player.body.blocked.down) {
+  this.player.setVelocityY(-160);
+  if (this.right) {
+    if (this.player.hasWeapon) {
+      this.player.anims.play("anim_saut_droite_arme", true);
+    } else {
+      this.player.anims.play("anim_saut_droite", true);
+    }
+  } else if (this.left) {
+    if (this.player.hasWeapon) {
+      this.player.anims.play("anim_saut_gauche_arme", true);
+    }
+    else {
+      this.player.anims.play("anim_saut_gauche", true);
+    }
+  }
 }
 
 
@@ -682,7 +782,11 @@ if (Phaser.Input.Keyboard.JustDown(this.keyK)
 }
 
 
-
+if (this.attackMode === "gun" && this.skills.Armes >= 1) {
+this.player.hasWeapon = true;
+} else {
+this.player.hasWeapon = false;
+}
 
   // --- PET ---
 
@@ -771,7 +875,7 @@ if (Phaser.Input.Keyboard.JustDown(this.keyK)
 this.projectiles.children.each((proj) => {
     if (proj.active) {
         const dist = Phaser.Math.Distance.Between(proj.spawnX, proj.spawnY, proj.x, proj.y);
-        if (dist > 300) {
+        if (dist > 370) {
             proj.destroy();
         }
     }
@@ -868,9 +972,14 @@ updateSkillUI(index) {
 
 
 
-    if (skill === "Armes" && this.skills["Armes"] >= 1) {
-    this.player.setTexture("img_perso_arme");
+    if (this.skills["Armes"] >= 1) {
+  this.player.setTexture("img_perso_arme");
+  this.player.hasWeapon = true;
+} else {
+  this.player.setTexture("img_perso");
+  this.player.hasWeapon = false;
 }
+
 
 }
 
@@ -1326,7 +1435,7 @@ attackGun() {
     let offsetY = 15;
 
     // Décalage horizontal selon direction
-    let offsetX = this.right ? 20 : -20;
+    let offsetX = this.right ? 20 : this.left ? -20 : 0;
 
     // Création du projectile un peu plus bas que le joueur
     let projectile = this.projectiles.create(
@@ -1337,17 +1446,18 @@ attackGun() {
 
     projectile.body.allowGravity = false;
 
-    projectile.setVelocityX(this.right ? 400 : -400);
+    if (this.left) {
+    projectile.setVelocityX(-400);  // shoot left
+  } else {
+    projectile.setVelocityX(400);   // shoot right
+  }
 
     // Cooldown
-    this.time.delayedCall(300, () => { this.canAttack = true; });
+    this.time.delayedCall(500, () => { this.canAttack = true; });
 
 if (projectile) {
     projectile.setActive(true).setVisible(true);
     projectile.body.enable = true;
-
-    // Donne une vitesse à la balle
-    this.physics.velocityFromRotation(this.player.rotation, 300, projectile.body.velocity);
 
     // On enregistre la position d'origine
     projectile.spawnX = this.player.x;
