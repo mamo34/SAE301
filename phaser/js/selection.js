@@ -22,6 +22,12 @@ export default class selection extends Phaser.Scene {
         Survie: 0,
         Mobilité: 0
     };
+    this.weaponModes = ['melee'];
+    if (this.skills.Armes >= 1) this.weaponModes.push('gun');
+    // Pour une troisième arme plus tard :
+    // if (this.skills.Mobilité >= 4) this.weaponModes.push('jetpack');
+    this.selectedWeaponIndex = 0;
+
 
     this.maxSkillLevel = 5;
     this.skillPoints = 0; // Points disponibles à dépenser
@@ -108,7 +114,7 @@ export default class selection extends Phaser.Scene {
   const tileset8 = map.addTilesetImage("f7ab0909-1e05-4e07-b6b9-1385aefbf71a", "tiles8");
   const tileset9 = map.addTilesetImage("Background map 2 extend", "tiles9");
   const tileset10 = map.addTilesetImage("sol_meca", "tiles10");
-  const tileset11 = map.addTilesetImage("sol_mine", "tiles11");
+  const tileset11 = map.addTilesetImage("82c71d7a-b3ba-4494-b2d4-4e3449d95bdd", "tiles11");
     
     // Créer les calques
     map.createLayer("background_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
@@ -256,11 +262,13 @@ this.canAttack = true;
 this.input.keyboard.on('keydown-O', () => {
     if (!this.player || !this.canAttack) return;
 
-    if (this.attackMode === "melee") {
-        this.attackMelee();
-    } else if (this.attackMode === "gun") {
-        this.attackGun();
-    }
+    if (this.attackMode === 'melee') {
+  this.attackMelee();
+} else if (this.attackMode === 'gun' && this.skills.Armes >= 1) {
+  this.attackGun();
+}
+// Si tu ajoutes une troisième arme, ajoute un else if ici
+
 });
 
 
@@ -284,6 +292,12 @@ this.input.keyboard.on('keydown', (event) => {
         this.skillPoints--; 
         this.updateSkillUI(this.selectedSkillIndex);
     }
+    if (skill === "Armes") {
+  this.weaponModes = ['melee'];
+  if (this.skills.Armes >= 1) this.weaponModes.push('gun');
+  // Pour une troisième arme, ajoute la condition ici
+}
+
 }
 
 
@@ -550,13 +564,15 @@ this.attackMode = "melee"; // "melee" ou "gun"
 
 // toggle avec P
 this.input.keyboard.on('keydown-P', () => {
-    this.attackMode = (this.attackMode === "melee") ? "gun" : "melee";
-    console.log("Mode :", this.attackMode);
+  this.selectedWeaponIndex = (this.selectedWeaponIndex + 1) % this.weaponModes.length;
+  this.attackMode = this.weaponModes[this.selectedWeaponIndex];
+  console.log("Mode :", this.attackMode);
 });
 
 
 
-map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8], 0, 0);
+
+map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
 
     
   }
