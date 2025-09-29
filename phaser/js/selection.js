@@ -63,7 +63,7 @@ export default class selection extends Phaser.Scene {
     this.load.image("skills", "./assets/skills.png");
 
     this.load.tilemapTiledJSON("map1", "./src/map1.json");
-    this.load.image("tiles1", "./src/map/background_map1.png");
+    this.load.image("tiles1", "./src/map/Background map 1 extend.png");
   this.load.image("tiles2", "./src/map/ea489fd3-6071-4143-aed7-fd1d786891b5.png");
   this.load.image("tiles3", "./src/map/36b0c958-0079-4b22-8533-efb9bb43834a (1).png");
   this.load.image("tiles4", "./src/map/9ad85738-bd94-4c71-ad80-97265cec83d5.png");
