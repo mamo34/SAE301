@@ -2,6 +2,7 @@ import * as fct from "./fonctions.js";
 import EnemyParabolic from "../src/enemy1.js";
 import EnemyCone from "../src/enemy2.js";
 import EnemySpider from "../src/enemy3.js";
+import EnemyBowling from "../src/enemy4.js";
 
 export default class selection extends Phaser.Scene {
   constructor() {
@@ -42,6 +43,9 @@ export default class selection extends Phaser.Scene {
     const baseURL = this.sys.game.config.baseURL;
     this.load.setBaseURL(baseURL);
 
+    this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
+
+
     this.load.spritesheet("img_perso", "./assets/dude.png", {
       frameWidth: 32,
       frameHeight: 70
@@ -60,6 +64,7 @@ export default class selection extends Phaser.Scene {
     });
 
     this.load.image("tir_enemy", "./assets/tirenemy.png");
+    this.load.image("tir_perso", "./assets/bullet_perso.png");
 
 
     this.load.image("img_potion", "./assets/fiole.png");
@@ -87,6 +92,24 @@ export default class selection extends Phaser.Scene {
 
 
 
+
+
+  // icônes
+    this.load.image("vide", "./assets/vide.png");
+    this.load.image("poing", "./assets/poing.png");
+    this.load.image("gun", "./assets/gun.png");
+    this.load.image("jetpack", "./assets/jetpack.png");
+
+    // cadres
+    this.load.image("cadre", "./assets/cadre.png");
+    this.load.image("cadreselect", "./assets/cadreselect.png");
+
+    //skills
+    this.load.image("skill_1", "./assets/skill_1.png");
+    this.load.image("skill_2", "./assets/skill_2.png");
+    this.load.image("skill_3", "./assets/skill_3.png");
+
+
     this.load.spritesheet("img_pet", "./assets/pet.png", {
       frameWidth: 40,
       frameHeight: 60
@@ -96,7 +119,15 @@ export default class selection extends Phaser.Scene {
   }
 
   create() {
+WebFont.load({
+        custom: {
+            families: ['The Sign Shop'],  // nom de la font
+            urls: ['./assets/TheCrowInlineShadowGrunge.css'] // optionnel si tu as un fichier css @font-face
+        },
+    });
 
+    const centerX = this.cameras.main.width / 2;
+  const centerY = this.cameras.main.height / 2;
     
     // ÉTAT DE SCÈNE
     this.gameOver = false;
@@ -156,6 +187,174 @@ this.physics.add.collider(this.player, rightWall);
 this.cameras.main.startFollow(this.player);
 this.cameras.main.setFollowOffset(0, 210);
 this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+
+  // --- Injecter CSS si pas déjà présent ---
+  if (!document.getElementById('hud-level-style')) {
+    const style = document.createElement('style');
+    style.id = 'hud-level-style';
+    style.textContent = `
+      .hud-level {
+        position: absolute;
+        top: 100px;
+        left: 51%;
+        transform: translateX(-50%);
+        pointer-events: none;
+        z-index: 9999;
+        isolation: isolate;
+        font-family: 'The Sign Shop', sans-serif;
+        font-size: 64px;
+        font-weight: 700;
+        text-align: center;
+        line-height: 1;
+      }
+        
+.hud-level .level-outline {
+  color: transparent; /* pas de couleur, que du stroke */
+  -webkit-text-stroke: 4px rgba(49, 22, 0, 0.8); /* contour net */
+  
+  filter: drop-shadow(3px 3px 5px rgba(0,0,0,0.6));
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+}
+      .hud-level .level-base {
+  color: #ffffffff; /* Base blanche → garde la texture du font */
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.6));
+  display: block;
+  position: relative;
+  filter: invert(1);
+  z-index: 1;
+}
+
+.hud-level .level-grad {
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  display: block;
+  z-index: 2;
+  background: linear-gradient(to bottom, rgba(255, 184, 104, 1), rgba(120,60,20,1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent; /* important */
+  mix-blend-mode: lighten; /* ou try multiply / screen / soft-light */
+  opacity: 1;
+  
+  pointer-events: none;
+}
+
+    `;
+    document.head.appendChild(style);
+  }
+
+  // --- Créer le container HUD ---
+  let hud = document.getElementById('hud-level');
+  if (!hud) {
+    hud = document.createElement('div');
+    hud.id = 'hud-level';
+    hud.className = 'hud-level';
+    hud.innerHTML = `
+      <span class="level-outline">Level ${this.playerLevel}</span>
+      <span class="level-base">Level ${this.playerLevel}</span>
+      <span class="level-grad">Level ${this.playerLevel}</span>
+    `;
+    hud.style.display = 'none'; // caché par défaut
+    document.body.appendChild(hud);
+  }
+
+  // Montrer en jeu
+  hud.style.display = '';
+
+  // Fonction pour mettre à jour le texte quand le joueur monte de level
+  this.updateHUD = (level) => {
+    hud.querySelector('.level-outline').textContent = `Level ${level}`;
+    hud.querySelector('.level-base').textContent = `Level ${level}`;
+    hud.querySelector('.level-grad').textContent = `Level ${level}`;
+  };
+
+  // Nettoyer quand la scène est quittée
+  this.events.once('shutdown', () => {
+    hud.style.display = 'none';
+  });
+
+  // --- Injecter CSS pour les points (séparé du Level) ---
+if (!document.getElementById('hud-points-style')) {
+  const style = document.createElement('style');
+  style.id = 'hud-points-style';
+  style.textContent = `
+    .hud-points {
+      position: absolute;
+      bottom: 40px; /* Ajuster selon ton Level */
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 9999;
+      isolation: isolate;
+      font-size: 30px;
+      font-family: 'The Sign Shop', sans-serif;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .hud-points .points-outline {
+      color: transparent;
+      -webkit-text-stroke: 3px rgba(49,22,0,0.8);
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 0;
+      filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+    }
+    .hud-points .points-base {
+      color: #fff;
+      position: relative;
+      z-index: 1;
+      filter: invert(1);
+      display: block;
+    }
+    .hud-points .points-grad {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 2;
+      background: linear-gradient(to bottom, rgba(255,184,104,1), rgba(120,60,20,1));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      mix-blend-mode: lighten;
+      pointer-events: none;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// --- Créer le container pour les points ---
+let hudPoints = document.getElementById('hud-points');
+if (!hudPoints) {
+  hudPoints = document.createElement('div');
+  hudPoints.id = 'hud-points';
+  hudPoints.className = 'hud-points';
+  hudPoints.innerHTML = `
+    <span class="points-outline">Points: ${this.skillPoints}</span>
+    <span class="points-base">Points: ${this.skillPoints}</span>
+    <span class="points-grad">Points: ${this.skillPoints}</span>
+  `;
+  hudPoints.style.display = 'none';
+  document.body.appendChild(hudPoints);
+}
+
+// --- Montrer en jeu ---
+hudPoints.style.display = '';
+
+// --- Fonction pour mettre à jour les points ---
+this.updatePointsHUD = (points) => {
+  hudPoints.querySelector('.points-outline').textContent = `Points: ${points}`;
+  hudPoints.querySelector('.points-base').textContent = `Points: ${points}`;
+  hudPoints.querySelector('.points-grad').textContent = `Points: ${points}`;
+};
 
 
 
@@ -343,6 +542,7 @@ this.input.keyboard.on('keydown', (event) => {
         this.skills[skill]++;
         this.skillPoints--; 
         this.updateSkillUI(this.selectedSkillIndex);
+        this.updatePointsHUD(this.skillPoints);
     }
     if (skill === "Armes") {
   this.weaponModes = ['melee'];
@@ -367,10 +567,16 @@ this.input.keyboard.on('keydown', (event) => {
     console.log(`XP +${amount} → total: ${this.playerXP}`);
 
     // Boucle pour gérer plusieurs niveaux si on dépasse
-    while (this.playerXP >= this.xpForNextLevel(this.playerLevel)) {
+while (this.playerXP >= this.xpForNextLevel(this.playerLevel)) {
     this.playerXP -= this.xpForNextLevel(this.playerLevel);
     this.playerLevel++;
-    this.levelText.setText(`Level ${this.playerLevel}`);
+
+    // 🔥 Utiliser la fonction qui met à jour le HUD HTML
+    if (this.updateHUD) {
+        this.updateHUD(this.playerLevel);
+    }
+
+
 
     // Ajouter un point d'amélioration
     this.skillPoints++;
@@ -380,6 +586,7 @@ this.input.keyboard.on('keydown', (event) => {
     // **Mettre à jour toutes les UI**
     for (let i = 0; i < this.skillKeys.length; i++) {
         this.updateSkillUI(i);
+        this.updatePointsHUD(this.skillPoints);
     }
 }
 
@@ -429,6 +636,8 @@ this.input.keyboard.on('keydown', (event) => {
 
     this.enemy10 = new EnemyCone(this, 1000, 1900, this.player, 50, 5, 10, 200);
     this.enemy11 = new EnemyCone(this, 2000, 1900, this.player, 50, 5, 10, 200);
+    this.enemy12 = new EnemyBowling(this, 500, 1900, this.player, 20, 1000, 1000, 1200);
+
 
 this.physics.add.collider(this.enemy0, this.platformLayer);
 this.physics.add.collider(this.enemy1, this.platformLayer);
@@ -442,6 +651,7 @@ this.physics.add.collider(this.enemy8, this.platformLayer);
 this.physics.add.collider(this.enemy9, this.platformLayer);
 this.physics.add.collider(this.enemy10, this.platformLayer);
 this.physics.add.collider(this.enemy11, this.platformLayer);
+this.physics.add.collider(this.enemy12, this.platformLayer);
 
 
 
@@ -458,13 +668,14 @@ this.physics.add.collider(this.enemy11, this.platformLayer);
 
     if (this.enemy10.startPatrol) this.enemy10.startPatrol(800, 1200, 70);
     if (this.enemy11.startPatrol) this.enemy11.startPatrol(1600, 2500, 70);
+    if (this.enemy12.startPatrol) this.enemy12.startPatrol(200, 1000, 70);
 
     
   
   
     // Créer un groupe avec les ennemis existants
 this.enemies = this.physics.add.group();
-[this.enemy0, this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11].forEach(e => {
+[this.enemy0, this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11, this.enemy12].forEach(e => {
   if (e) this.enemies.add(e);
 });
 
@@ -485,8 +696,6 @@ this.input.keyboard.on('keydown-M', () => {
 
 
 
-
-
     // --- BARRES UI ---
 
 // --- BARRES intérieures (dessinées en premier) ---
@@ -494,18 +703,6 @@ this.playerHealthBar = this.add.graphics().setScrollFactor(0);
 this.playerManaBar = this.add.graphics().setScrollFactor(0);
 this.playerXPBar = this.add.graphics().setScrollFactor(0);
 
-// Texte Level
-this.levelText = this.add.text(
-    this.cameras.main.width / 2 + 10, // position à droite de la barre XP
-    10, // alignement vertical avec la barre XP
-    `Level ${this.playerLevel}`,
-    {
-        fontSize: "24px",
-        fill: "#ffffff",
-        fontFamily: "Arial",
-        fontStyle: "bold"
-    }
-).setOrigin(0.5, 0).setScrollFactor(0).setDepth(10);
 
 
 // --- CADRES (au-dessus) ---
@@ -528,29 +725,49 @@ this.updatePlayerManaBar();
 this.updatePlayerXPBar();
 
 
-// Container pour les skills
-this.skillUI = this.add.container(20, this.cameras.main.height - 100).setScrollFactor(0).setDepth(10);
 
-// Texte des compétences
-this.skillUIText = [];
+// Container permanent pour l’UI des skills
+this.skillUI = this.add.container(5, this.cameras.main.height - 190)
+    .setScrollFactor(0)
+    .setDepth(10);
+
+this.skillUIBars = [];
+
+const skillFrames = ["skill_1", "skill_2", "skill_3"]; // ordre = Armes, Survie, Mobilité
+
 for (let i = 0; i < this.skillKeys.length; i++) {
-    let skill = this.skillKeys[i];
-    let txt = this.add.text(0, i * 25, `${skill}: ${this.skills[skill]} / ${this.maxSkillLevel}`, {
-        fontSize: "18px",
-        fill: "#fff",
-        fontFamily: "Arial"
-    }).setOrigin(0, 0);
-    this.skillUI.add(txt);
-    this.skillUIText.push(txt);
+    const frameKey = skillFrames[i];
+
+    // décalage vertical plus espacé (70px au lieu de 50)
+    let offsetY = i * 70;
+
+    // Taille utilisable pour la barre (ajuste selon ton cadre)
+    let barX = 85;
+    let barY = offsetY;
+    let barWidth = 121;
+    let barHeight = 20;
+
+    // Fond + remplissage
+    let barFill = this.add.graphics();
+
+    // Traits de séparation (5 paliers)
+    let barTicks = this.add.graphics();
+    barTicks.lineStyle(1, 0xffffae, 0.5);
+    for (let j = 1; j < 5; j++) {
+        let tickX = barX + (j / 5) * barWidth;
+        barTicks.lineBetween(tickX, barY - barHeight / 2, tickX, barY + barHeight / 2);
+    }
+
+    // Cadre image (⚡ ajouté en dernier pour être devant)
+    let frame = this.add.image(0, offsetY, frameKey).setOrigin(0, 0.5).setScale(0.65);
+
+    // Ajouter dans le container (ordre = barFill → barTicks → frame devant)
+    this.skillUI.add([barFill, barTicks, frame]);
+
+    this.skillUIBars.push({ barFill, barX, barY, barWidth, barHeight });
 }
 
-// Points disponibles
-this.skillPointsUI = this.add.text(0, this.skillKeys.length * 25 + 5, `Points à dépenser: ${this.skillPoints}`, {
-    fontSize: "16px",
-    fill: "#0f0",
-    fontFamily: "Arial"
-}).setOrigin(0, 0);
-this.skillUI.add(this.skillPointsUI);
+
 
 
 // --- Création des 2 zones de téléportation ---
@@ -645,25 +862,59 @@ this.physics.add.overlap(this.projectiles, this.enemies, (projectile, enemy) => 
 }, null, this);
 
 
-this.attackMode = "melee"; // "melee" ou "gun"
+// modes d'attaque
+    this.weaponModes = ["melee", "gun", "jetpack"];
+    this.selectedWeaponIndex = 0;
+    this.attackMode = this.weaponModes[this.selectedWeaponIndex];
 
-// toggle avec P
-this.input.keyboard.on('keydown-P', () => {
-  this.selectedWeaponIndex = (this.selectedWeaponIndex + 1) % this.weaponModes.length;
-  this.attackMode = this.weaponModes[this.selectedWeaponIndex];
-  this.weaponModeText.setText("Mode : " + this.attackMode);
-  console.log("Mode :", this.attackMode);
+    // groupe UI des armes
+    this.weaponUI = [];
+
+    const startX = 1045; // position X du premier slot
+    const startY = 665;  // position Y
+    const spacing = 90; // espacement horizontal entre icônes=
+
+    for (let i = 0; i < this.weaponModes.length; i++) {
+        let iconKey = "vide"; // par défaut
+
+        if (i === 0) iconKey = "poing"; // poing toujours dispo
+        else if (i === 1 && this.skills.Armes >= 1) iconKey = "gun";
+        else if (i === 2 && this.skills.Mobilité >= 3) iconKey = "jetpack";
+
+        // icône
+        const icon = this.add.image(startX + i * spacing, startY, iconKey)
+            .setScrollFactor(0)
+            .setDepth(20)
+            .setScale(0.30);
+
+        // cadre
+        const frame = this.add.image(startX + i * spacing, startY, "cadre")
+            .setScrollFactor(0)
+            .setDepth(21)
+            .setScale(0.35);
+
+        this.weaponUI.push({ icon, frame });
+    }
+
+    // touche P pour changer de mode
+    this.input.keyboard.on("keydown-P", () => {
+    let nextIndex = this.selectedWeaponIndex;
+
+    do {
+        nextIndex = (nextIndex + 1) % this.weaponModes.length;
+    } while (!this.isWeaponUnlocked(nextIndex) && nextIndex !== this.selectedWeaponIndex);
+
+    // si au moins un mode est dispo
+    if (this.isWeaponUnlocked(nextIndex)) {
+        this.selectedWeaponIndex = nextIndex;
+        this.attackMode = this.weaponModes[this.selectedWeaponIndex];
+        this.refreshWeaponUI();
+        console.log("Mode :", this.attackMode);
+    }
 });
 
 
-this.weaponModeText = this.add.text(
-  120, // x position, à adapter selon ton interface
-  20, // y position
-  "Mode : " + this.attackMode,
-  { fontSize: "22px", fill: "#ff0", fontFamily: "Arial", fontStyle: "bold" }
-).setScrollFactor(0).setDepth(20);
-
-
+    this.refreshWeaponUI();
 
 
 
@@ -953,35 +1204,37 @@ updatePlayerXPBar() {
 
 updateSkillUI(index) {
     const skill = this.skillKeys[index];
+    const value = this.skills[skill];
 
+    let { barFill, barX, barY, barWidth, barHeight } = this.skillUIBars[index];
+
+    // Nettoyer avant de redessiner
+    barFill.clear();
+
+    // Ratio du remplissage
+    let ratio = value / this.maxSkillLevel;
+
+    // Barre verte
+    barFill.fillStyle(0xfcad03, 1);
+    barFill.fillRoundedRect(barX, barY - barHeight / 2, ratio * barWidth, barHeight, 4);
+
+    // Points disponibles
+    if (this.skillPointsUI)
+        this.updatePointsHUD(this.skillPoints);
     
 
-    // UI permanente (en bas)
-    if (this.skillUIText && this.skillUIText[index])
-        this.skillUIText[index].setText(`${skill}: ${this.skills[skill]} / ${this.maxSkillLevel}`);
-    if (this.skillPointsUI)
-        this.skillPointsUI.setText(`Points à dépenser: ${this.skillPoints}`);
-
-    // UI pause
-    if (this.skillMenuTexts && this.skillMenuTexts[index])
-        this.skillMenuTexts[index].setText(`${skill}: ${this.skills[skill]} / ${this.maxSkillLevel}`);
-    if (this.skillPointsText)
-        this.skillPointsText.setText(`Points à dépenser: ${this.skillPoints}`);
-
-
-
-
-
+    // Effet gameplay (ton code existant)
     if (this.skills["Armes"] >= 1) {
-  this.player.setTexture("img_perso_arme");
-  this.player.hasWeapon = true;
-} else {
-  this.player.setTexture("img_perso");
-  this.player.hasWeapon = false;
+        this.refreshWeaponUI();
+        this.player.setTexture("img_perso_arme");
+        this.player.hasWeapon = true;
+    } else {
+        this.player.setTexture("img_perso");
+        this.player.hasWeapon = false;
+    }
 }
 
 
-}
 
 
 
@@ -1062,22 +1315,24 @@ perdreVie() {
         if (this.enemy2) this.enemy2.setActive(false).setVisible(false);
         if (this.enemy4) this.enemy4.setActive(false).setVisible(false);
         if (this.enemy6) this.enemy6.setActive(false).setVisible(false);
-        if (this.enemy0) this.enemy7.setActive(false).setVisible(false);
-        if (this.enemy1) this.enemy8.setActive(false).setVisible(false);
-        if (this.enemy2) this.enemy9.setActive(false).setVisible(false);
-        if (this.enemy4) this.enemy10.setActive(false).setVisible(false);
-        if (this.enemy6) this.enemy11.setActive(false).setVisible(false);
+        if (this.enemy7) this.enemy7.setActive(false).setVisible(false);
+        if (this.enemy8) this.enemy8.setActive(false).setVisible(false);
+        if (this.enemy9) this.enemy9.setActive(false).setVisible(false);
+        if (this.enemy10) this.enemy10.setActive(false).setVisible(false);
+        if (this.enemy11) this.enemy11.setActive(false).setVisible(false);
+        if (this.enemy12) this.enemy12.setActive(false).setVisible(false);
         if (this.projectiles) this.projectiles.clear(true, true);
         if (this.enemy0?.projectiles) this.enemy0.projectiles.clear(true, true);
         if (this.enemy1?.projectiles) this.enemy1.projectiles.clear(true, true);
         if (this.enemy2?.projectiles) this.enemy2.projectiles.clear(true, true);
         if (this.enemy4?.projectiles) this.enemy4.projectiles.clear(true, true);
         if (this.enemy6?.projectiles) this.enemy6.projectiles.clear(true, true);
-        if (this.enemy0?.projectiles) this.enemy7.projectiles.clear(true, true);
-        if (this.enemy1?.projectiles) this.enemy8.projectiles.clear(true, true);
-        if (this.enemy2?.projectiles) this.enemy9.projectiles.clear(true, true);
-        if (this.enemy4?.projectiles) this.enemy10.projectiles.clear(true, true);
-        if (this.enemy6?.projectiles) this.enemy11.projectiles.clear(true, true);
+        if (this.enemy7?.projectiles) this.enemy7.projectiles.clear(true, true);
+        if (this.enemy8?.projectiles) this.enemy8.projectiles.clear(true, true);
+        if (this.enemy9?.projectiles) this.enemy9.projectiles.clear(true, true);
+        if (this.enemy10?.projectiles) this.enemy10.projectiles.clear(true, true);
+        if (this.enemy11?.projectiles) this.enemy11.projectiles.clear(true, true);
+        if (this.enemy12?.projectiles) this.enemy12.projectiles.clear(true, true);
         if (this.player) this.player.setTint(0xff0000);
         this.add.text(400, 300, 'GAME OVER', { 
             fontSize: '32px', 
@@ -1128,7 +1383,7 @@ this.petShootEvent = this.time.addEvent({
     // Chercher le plus proche ennemi actif
     let target = null;
     let minDist = 1000;
-    [this.enemy0, this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11].forEach(enemy => {
+    [this.enemy0, this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11, this.enemy12].forEach(enemy => {
       if (enemy && enemy.active) {
         const dx = enemy.x - this.pet.x;
         const dy = enemy.y - this.pet.y;
@@ -1230,6 +1485,12 @@ showPauseMenu() {
         this.cameras.main.height / 2
     );
 
+    let hud = document.getElementById("hud-level");
+    if (hud) hud.style.display = "none";
+    
+    let hud1 = document.getElementById("hud-points");
+    if (hud1) hud1.style.display = "none";
+
     this.pauseMenu.setScrollFactor(0); // ✅ Container ne bouge pas avec la caméra
 
     // Fond noir semi-transparent
@@ -1250,12 +1511,8 @@ showPauseMenu() {
     this.pauseMenu.add(txt);
 
     // Points
-    this.skillPointsText = this.add.text(0, 80, `Points à dépenser: ${this.skillPoints}`, {
-        fontSize: "20px",
-        fill: "#0f0",
-        fontFamily: "Arial"
-    }).setOrigin(0.5).setScrollFactor(0);
-    this.pauseMenu.add(this.skillPointsText);
+    this.updatePointsHUD(this.skillPoints);
+
 
     // Liste des skills
     this.skillMenuTexts = [];
@@ -1281,6 +1538,7 @@ showPauseMenu() {
     this.pauseMenu.add(this.skillSelector);
 
     this.pauseMenu.setDepth(1000);
+    
 }
 
 
@@ -1294,6 +1552,11 @@ hidePauseMenu() {
         this.skillSelector = null;
         this.bg = null;
     }
+    // Réafficher HUD HTML
+    let hud = document.getElementById("hud-level");
+    if (hud) hud.style.display = "";
+    let hud1 = document.getElementById("hud-points");
+    if (hud1) hud1.style.display = "";
 }
 
 
@@ -1361,7 +1624,6 @@ shootProjectile() {
     // Crée le projectile
     const projectile = this.projectiles.create(this.player.x, this.player.y + 50, null);
     projectile.setSize(8, 8); 
-    projectile.setTint(0xffff00); // couleur jaune
     projectile.body.allowGravity = false;
 
     // Vitesse
@@ -1432,7 +1694,7 @@ attackGun() {
     this.canAttack = false;
 
     // Décalage vertical : +10 ou +20 selon la taille du sprite
-    let offsetY = 15;
+    let offsetY = 10;
 
     // Décalage horizontal selon direction
     let offsetX = this.right ? 20 : this.left ? -20 : 0;
@@ -1447,10 +1709,13 @@ attackGun() {
     projectile.body.allowGravity = false;
 
     if (this.left) {
-    projectile.setVelocityX(-400);  // shoot left
-  } else {
-    projectile.setVelocityX(400);   // shoot right
-  }
+  projectile.setVelocityX(-400); // shoot left
+  projectile.setFlipX(true);     // retourne l'image horizontalement
+} else {
+  projectile.setVelocityX(400);  // shoot right
+  projectile.setFlipX(false);    // orientation normale
+}
+
 
     // Cooldown
     this.time.delayedCall(500, () => { this.canAttack = true; });
@@ -1466,7 +1731,31 @@ if (projectile) {
 
 }
 
+refreshWeaponUI() {
+    for (let i = 0; i < this.weaponModes.length; i++) {
+        let iconKey = "vide";
 
+        if (i === 0) iconKey = "poing"; // poing toujours dispo
+        else if (i === 1 && this.skills.Armes >= 1) iconKey = "gun";
+        else if (i === 2 && this.skills.Mobilité >= 3) iconKey = "jetpack";
+
+        this.weaponUI[i].icon.setTexture(iconKey);
+
+        // cadre normal ou sélectionné
+        if (i === this.selectedWeaponIndex) {
+            this.weaponUI[i].frame.setTexture("cadreselect");
+        } else {
+            this.weaponUI[i].frame.setTexture("cadre");
+        }
+    }
+}
+
+isWeaponUnlocked(index) {
+    if (index === 0) return true; // poing toujours dispo
+    if (index === 1) return this.skills.Armes >= 1;
+    if (index === 2) return this.skills.Mobilité >= 3;
+    return false;
+}
 
 
 }
