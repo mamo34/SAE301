@@ -3,6 +3,7 @@ import EnemyParabolic from "../src/enemy1.js";
 import EnemyCone from "../src/enemy2.js";
 import EnemySpider from "../src/enemy3.js";
 import EnemyBowling from "../src/enemy4.js";
+import Tesla from '../src/Tesla.js';
 
 export default class selection extends Phaser.Scene {
   constructor() {
@@ -63,6 +64,13 @@ export default class selection extends Phaser.Scene {
       frameHeight: 32
     });
 
+    this.load.spritesheet("tesla", "./assets/tesla.png", {
+      frameWidth: 160,
+      frameHeight: 128
+    });
+
+
+    this.load.image("bullet_tesla", "./assets/bullet_tesla.png");
     this.load.image("tir_enemy", "./assets/tirenemy.png");
     this.load.image("tir_perso", "./assets/bullet_perso.png");
 
@@ -639,6 +647,14 @@ while (this.playerXP >= this.xpForNextLevel(this.playerLevel)) {
     this.enemy12 = new EnemyBowling(this, 500, 1900, this.player, 20, 1000, 1000, 1200);
 
 
+
+    this.tesla1 = new Tesla(this, 600, 300, this.player);  // x=600, y=300
+    this.add.existing(this.tesla1);
+
+    // Ajouter collision entre le joueur et la Tesla (facultatif si tu veux bloquer le joueur)
+    this.physics.add.collider(this.player, this.tesla1);
+    //this.physics.add.collider(this.tesla1, this.platformLayer);
+
 this.physics.add.collider(this.enemy0, this.platformLayer);
 this.physics.add.collider(this.enemy1, this.platformLayer);
 this.physics.add.collider(this.enemy2, this.platformLayer);
@@ -1131,6 +1147,13 @@ this.projectiles.children.each((proj) => {
         }
     }
 });
+
+
+
+
+
+
+
 
   }
 
