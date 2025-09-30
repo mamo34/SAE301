@@ -57,8 +57,8 @@ export default class debut extends Phaser.Scene {
     const creditsBG = this.add.image(centerX, centerY, "pageCredits");
 
     // Boutons retour
-    this.retour1 = this.createButton(centerX + 500, centerY - 250, "boutonRetour", () => this.hidePages(), buttonScale);
-    this.retour2 = this.createButton(centerX, centerY + 300, "boutonRetour", () => this.hidePages(), buttonScale);
+    this.retour1 = this.createButton(centerX, centerY + 290, "boutonRetour", () => this.hidePages(), buttonScale);
+    this.retour2 = this.createButton(centerX, centerY + 290, "boutonRetour", () => this.hidePages(), buttonScale);
 
     this.pageControles.add([controlesBG, this.retour1]);
     this.pageCredits.add([creditsBG, this.retour2]);
