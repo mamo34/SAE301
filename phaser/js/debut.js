@@ -15,7 +15,7 @@ export default class debut extends Phaser.Scene {
 
     // Pages
     this.load.image("pageControles", "./assets/commandes.png");
-    this.load.image("pageCredits", "./assets/page credit.jpg");
+    this.load.image("pageCredits", "./assets/credits.jpg");
   }
 
   create() {
