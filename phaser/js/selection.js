@@ -77,6 +77,7 @@ export default class selection extends Phaser.Scene {
 
     this.load.image("img_potion", "./assets/fiole.png");
     this.load.image("img_gold", "./assets/engrenage.png");
+    this.load.image("fleche", "./assets/fleche.png");
 
 
     this.load.image("cadre_mana", "./assets/barre mana.png");
@@ -99,7 +100,9 @@ export default class selection extends Phaser.Scene {
 
 
 
-
+this.load.image("boutonControles", "./assets/boutoncontroles.png");
+    this.load.image("boutonJouer", "./assets/boutonjouer.png");
+    this.load.image("boutonSkills", "./assets/skills.png");
 
 
   // icônes
@@ -195,6 +198,8 @@ this.physics.add.collider(this.player, rightWall);
 this.cameras.main.startFollow(this.player);
 this.cameras.main.setFollowOffset(0, 210);
 this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+this.playerGold = 0;
 
 
   // --- Injecter CSS si pas déjà présent ---
@@ -363,6 +368,92 @@ this.updatePointsHUD = (points) => {
   hudPoints.querySelector('.points-base').textContent = `Points: ${points}`;
   hudPoints.querySelector('.points-grad').textContent = `Points: ${points}`;
 };
+
+
+
+// --- Créer le container HUD Gold ---
+let hudGold = document.getElementById('hud-gold');
+if (!hudGold) {
+  hudGold = document.createElement('div');
+  hudGold.id = 'hud-gold';
+  hudGold.className = 'hud-gold';
+  hudGold.innerHTML = `
+    <span class="gold-outline">${this.playerGold}</span>
+    <span class="gold-base">${this.playerGold}</span>
+    <span class="gold-grad">${this.playerGold}</span>
+  `;
+  hudGold.style.display = 'none';
+  document.body.appendChild(hudGold);
+}
+
+// --- CSS pour le HUD Gold ---
+if (!document.getElementById('hud-gold-style')) {
+  const style = document.createElement('style');
+  style.id = 'hud-gold-style';
+  style.textContent = `
+    .hud-gold {
+      position: absolute;
+      top: 50px;
+      right: 20px;
+      pointer-events: none;
+      z-index: 9999;
+      isolation: isolate;
+      font-family: Arial, sans-serif;
+      font-weight: 700;
+      text-align: right;
+      line-height: 1;
+    }
+
+    /* Contour */
+    .hud-gold .gold-outline {
+      color: transparent;
+      -webkit-text-stroke: 3px rgba(49,22,0,0.8);
+      position: absolute;
+      right: 0;
+      top: 0;
+      z-index: 0;
+      filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+      font-size: 35px;
+    }
+
+    /* Base */
+    .hud-gold .gold-base {
+      color: #fff;
+      position: relative;
+      z-index: 1;
+      filter: invert(1);
+      display: block;
+      font-size: 35px;
+    }
+
+    /* Gradient */
+    .hud-gold .gold-grad {
+      position: absolute;
+      right: 0;
+      top: 0;
+      z-index: 2;
+      background: linear-gradient(to bottom, #ffd700, #ffa41a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      mix-blend-mode: lighten;
+      pointer-events: none;
+      font-size: 35px;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// --- Montrer HUD Gold ---
+hudGold.style.display = '';
+
+// --- Fonction pour mettre à jour l’or ---
+this.updateGoldHUD = (gold) => {
+  hudGold.querySelector('.gold-outline').textContent = `${gold}`;
+  hudGold.querySelector('.gold-base').textContent = `${gold}`;
+  hudGold.querySelector('.gold-grad').textContent = `${gold}`;
+};
+
 
 
 
@@ -538,38 +629,55 @@ this.input.keyboard.on('keydown-O', () => {
 this.input.keyboard.on('keydown', (event) => {
     if (!this.isPause) return;
 
-    if (event.key === "ArrowUp") {
-        this.selectedSkillIndex = Phaser.Math.Wrap(this.selectedSkillIndex - 1, 0, this.skillKeys.length);
-        this.skillSelector.y = -50 + this.selectedSkillIndex * 40;
-    } else if (event.key === "ArrowDown") {
-        this.selectedSkillIndex = Phaser.Math.Wrap(this.selectedSkillIndex + 1, 0, this.skillKeys.length);
-        this.skillSelector.y = -50 + this.selectedSkillIndex * 40;
-    } else if (event.key.toLowerCase() === "i") {
-    let skill = this.skillKeys[this.selectedSkillIndex];
-    if (this.skillPoints > 0 && this.skills[skill] < this.maxSkillLevel) {
-        this.skills[skill]++;
-        this.skillPoints--; 
-        this.updateSkillUI(this.selectedSkillIndex);
-        this.updatePointsHUD(this.skillPoints);
+    if (this.pageSkills.visible) {
+        // navigation avec flèche
+        if (event.key === "ArrowUp") {
+  if (this.selectedSkillIndex > 0) {
+    this.selectedSkillIndex--;
+    this.updateSkillSelector();
+  }
+} else if (event.key === "ArrowDown") {
+  if (this.selectedSkillIndex < 3) {  // 3 correspond au 4e bouton, le bouton retour
+    this.selectedSkillIndex++;
+    this.updateSkillSelector();
+  }
+}
+
+
+ else if (event.key.toLowerCase() === "i" && this.activePage === this.pageSkills) {
+    const selected = this.skillSelectorButtons[this.selectedSkillIndex];
+    
+    if (typeof selected === "string") {
+        // c'est un skill normal
+        let skill = selected;
+        if (this.skillPoints > 0 && this.skills[skill] < this.maxSkillLevel) {
+            this.skills[skill]++;
+            this.skillPoints--; 
+            this.updateSkillUI(this.selectedSkillIndex);
+            this.updatePointsHUD(this.skillPoints);
+        }
+
+        if (skill === "Armes") {
+            this.weaponModes = ['melee'];
+            if (this.skills.Armes >= 1) this.weaponModes.push('gun');
+        }
+
+    } else if (selected && typeof selected.callback === "function") {
+        // c'est un bouton (retour2)
+        selected.callback();
     }
-    if (skill === "Armes") {
-  this.weaponModes = ['melee'];
-  if (this.skills.Armes >= 1) this.weaponModes.push('gun');
-  // Pour une troisième arme, ajoute la condition ici
 }
-
-}
-
-
+    }
 });
 
 
 
 
 
-    this.playerGold = 0;
-    this.playerMana = 0;
 
+
+
+    this.playerMana = 0;
     this.gainXP = (amount) => {
     this.playerXP += amount;
     console.log(`XP +${amount} → total: ${this.playerXP}`);
@@ -618,7 +726,7 @@ while (this.playerXP >= this.xpForNextLevel(this.playerLevel)) {
     this.events.on("goldPickup", amount => {
     this.playerGold += amount;
     console.log(`Gold +${amount} → total: ${this.playerGold}`);
-    this.goldText.setText(`${this.playerGold}`);
+    this.updateGoldHUD(this.playerGold)
 });
 
 
@@ -711,7 +819,13 @@ this.input.keyboard.on('keydown-M', () => {
 });
 
 
+this.cursors = this.input.keyboard.createCursorKeys();
+    this.keyI = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I);
 
+    this.pauseKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L);
+
+    this.isPause = false;
+    this.isDansMenu = false; // ✅ ajout pour savoir si on navigue dans le menu
     // --- BARRES UI ---
 
 // --- BARRES intérieures (dessinées en premier) ---
@@ -729,11 +843,6 @@ this.cadreXP = this.add.image(this.cameras.main.width/2, 20, "cadre_xp").setOrig
 
 // --- GOLD ---
 this.goldIcon = this.add.image(this.cameras.main.width - 120, 20, "img_gold").setOrigin(0,0).setScrollFactor(0).setScale(0.2);
-this.goldText = this.add.text(this.cameras.main.width - 15, 30, `${this.playerGold}`, {
-    fontSize: "35px",
-    fill: "#ffa41aff",
-    fontFamily: "Arial"
-}).setOrigin(1, 0).setScrollFactor(0);
 
 // Initialiser les barres
 this.updatePlayerHealthBar();
@@ -742,46 +851,29 @@ this.updatePlayerXPBar();
 
 
 
-// Container permanent pour l’UI des skills
-this.skillUI = this.add.container(5, this.cameras.main.height - 190)
+// HUD permanent (en jeu)
+this.skillUI_HUD = this.add.container(5, this.cameras.main.height - 190)
     .setScrollFactor(0)
-    .setDepth(10);
+    .setDepth(10)
+    .setVisible(true);
 
-this.skillUIBars = [];
+this.skillUIBars_HUD = [];
+this.createSkillBars(this.skillUI_HUD, this.skillUIBars_HUD);
 
-const skillFrames = ["skill_1", "skill_2", "skill_3"]; // ordre = Armes, Survie, Mobilité
+// HUD dans la page Skills (menu pause)
+this.skillUI_Menu = this.add.container(this.cameras.main.width/2 - 200, this.cameras.main.height/2 - 100)
+    .setScrollFactor(0)
+    .setDepth(2001)
+    .setVisible(false);
 
-for (let i = 0; i < this.skillKeys.length; i++) {
-    const frameKey = skillFrames[i];
+this.skillUIBars_Menu = [];
+this.createSkillBars(this.skillUI_Menu, this.skillUIBars_Menu);
 
-    // décalage vertical plus espacé (70px au lieu de 50)
-    let offsetY = i * 70;
+// Texte points pour le menu pause
+this.skillPointsUI_Menu = this.add.text(this.cameras.main.width/2, this.cameras.main.height/2 - 150,
+    `Points disponibles: ${this.skillPoints}`, { fontSize: "30px", fill: "#0f0" }
+).setOrigin(0.5).setScrollFactor(0).setDepth(2001).setVisible(false);
 
-    // Taille utilisable pour la barre (ajuste selon ton cadre)
-    let barX = 85;
-    let barY = offsetY;
-    let barWidth = 121;
-    let barHeight = 20;
-
-    // Fond + remplissage
-    let barFill = this.add.graphics();
-
-    // Traits de séparation (5 paliers)
-    let barTicks = this.add.graphics();
-    barTicks.lineStyle(1, 0xffffae, 0.5);
-    for (let j = 1; j < 5; j++) {
-        let tickX = barX + (j / 5) * barWidth;
-        barTicks.lineBetween(tickX, barY - barHeight / 2, tickX, barY + barHeight / 2);
-    }
-
-    // Cadre image (⚡ ajouté en dernier pour être devant)
-    let frame = this.add.image(0, offsetY, frameKey).setOrigin(0, 0.5).setScale(0.65);
-
-    // Ajouter dans le container (ordre = barFill → barTicks → frame devant)
-    this.skillUI.add([barFill, barTicks, frame]);
-
-    this.skillUIBars.push({ barFill, barX, barY, barWidth, barHeight });
-}
 
 
 
@@ -937,30 +1029,60 @@ this.physics.add.overlap(this.projectiles, this.enemies, (projectile, enemy) => 
 
 map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
 
+    this.activeButtons = this.menuButtons || [];
+
+
     
   }
 
   update() {
 // Toggle pause avec L
-if (Phaser.Input.Keyboard.JustDown(this.pauseKey)) {
+// --- Gestion du toggle pause ---
+    if (Phaser.Input.Keyboard.JustDown(this.pauseKey)) {
+    // Bloque L si on est dans une page interne (Contrôles OU Skills)
+    if (this.pageControles?.visible || this.pageSkills?.visible) {
+        return; // on ne ferme pas avec L
+    }
+
     this.isPause = !this.isPause;
 
     if (this.isPause) {
-        this.physics.world.pause(); // stoppe toute la physique
-        this.time.paused = true;    // stoppe les timers
+        this.physics.world.pause();
+        this.time.paused = true;
         this.showPauseMenu();
+        this.isDansMenu = true;   // ✅ on active la navigation menu
     } else {
-        this.physics.world.resume(); // reprend la physique
-        this.time.paused = false;    // reprend les timers
+        this.physics.world.resume();
+        this.time.paused = false;
         this.hidePauseMenu();
+        this.isDansMenu = false;  // ✅ retour au jeu
     }
 }
 
-// Si en pause, bloquer le reste du update
-if (this.isPause) return;
 
-  if (!this.player || !this.player.body) return;
-  if (this.gameOver) return;
+
+    // --- Si on est dans le menu pause, gérer navigation ---
+if (this.isDansMenu && !this.pageSkills.visible) {
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
+        this.selectedIndex = (this.selectedIndex + 1) % this.activeButtons.length;
+        this.updateButtonSelection();
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
+        this.selectedIndex = (this.selectedIndex - 1 + this.activeButtons.length) % this.activeButtons.length;
+        this.updateButtonSelection();
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(this.keyI)) {
+        const btn = this.activeButtons[this.selectedIndex];
+        if (btn.callback) btn.callback();
+    }
+
+    return; // bloque les contrôles du joueur
+}
+
+
+    // --- Sinon, logique du joueur habituelle ---
+    if (!this.player || !this.player.body) return;
+    if (this.gameOver) return;
 
   // --- PLAYER ---
   if (this.clavier.left.isDown) {
@@ -1228,34 +1350,21 @@ updatePlayerXPBar() {
 updateSkillUI(index) {
     const skill = this.skillKeys[index];
     const value = this.skills[skill];
+    const ratio = value / this.maxSkillLevel;
 
-    let { barFill, barX, barY, barWidth, barHeight } = this.skillUIBars[index];
+    // Mets à jour les deux sets de barres (HUD + Menu)
+    [this.skillUIBars_HUD, this.skillUIBars_Menu].forEach(barSet => {
+        if (!barSet[index]) return;
+        let { barFill, barX, barY, barWidth, barHeight } = barSet[index];
+        barFill.clear();
+        barFill.fillStyle(0xfcad03, 1);
+        barFill.fillRoundedRect(barX, barY - barHeight / 2, ratio * barWidth, barHeight, 4);
+    });
 
-    // Nettoyer avant de redessiner
-    barFill.clear();
-
-    // Ratio du remplissage
-    let ratio = value / this.maxSkillLevel;
-
-    // Barre verte
-    barFill.fillStyle(0xfcad03, 1);
-    barFill.fillRoundedRect(barX, barY - barHeight / 2, ratio * barWidth, barHeight, 4);
-
-    // Points disponibles
-    if (this.skillPointsUI)
-        this.updatePointsHUD(this.skillPoints);
-    
-
-    // Effet gameplay (ton code existant)
-    if (this.skills["Armes"] >= 1) {
-        this.refreshWeaponUI();
-        this.player.setTexture("img_perso_arme");
-        this.player.hasWeapon = true;
-    } else {
-        this.player.setTexture("img_perso");
-        this.player.hasWeapon = false;
-    }
+    // Mets à jour le compteur de points (HUD + Menu)
+    if (this.skillPointsUI_Menu) this.skillPointsUI_Menu.setText(`Points disponibles: ${this.skillPoints}`);
 }
+
 
 
 
@@ -1501,86 +1610,7 @@ this.tweens.add({
 
 
 
-showPauseMenu() {
-    // Container au centre de l’écran (et non pas du monde)
-    this.pauseMenu = this.add.container(
-        this.cameras.main.width / 2,
-        this.cameras.main.height / 2
-    );
 
-    let hud = document.getElementById("hud-level");
-    if (hud) hud.style.display = "none";
-    
-    let hud1 = document.getElementById("hud-points");
-    if (hud1) hud1.style.display = "none";
-
-    this.pauseMenu.setScrollFactor(0); // ✅ Container ne bouge pas avec la caméra
-
-    // Fond noir semi-transparent
-    this.bg = this.add.rectangle(
-        0, 0,
-        this.cameras.main.width,
-        this.cameras.main.height,
-        0x000000,
-        0.7
-    );
-    this.bg.setScrollFactor(0);
-    this.pauseMenu.add(this.bg);
-
-    // Titre
-    const txt = this.add.text(0, -200, "Pause Menu", { fontSize: "24px", fill: "#fff" })
-        .setOrigin(0.5);
-    txt.setScrollFactor(0);
-    this.pauseMenu.add(txt);
-
-    // Points
-    this.updatePointsHUD(this.skillPoints);
-
-
-    // Liste des skills
-    this.skillMenuTexts = [];
-    for (let i = 0; i < this.skillKeys.length; i++) {
-        let skill = this.skillKeys[i];
-        let yPos = -50 + i * 40;
-
-        let txt = this.add.text(0, yPos, `${skill}: ${this.skills[skill]} / ${this.maxSkillLevel}`, {
-            fontSize: "20px",
-            fill: "#fff",
-            fontFamily: "Arial"
-        }).setOrigin(0.5).setScrollFactor(0);
-
-        this.skillMenuTexts.push(txt);
-        this.pauseMenu.add(txt);
-    }
-
-    // Flèche de sélection
-    this.skillSelector = this.add.text(-120, -50 + this.selectedSkillIndex * 40, "→", {
-        fontSize: "20px",
-        fill: "#ff0"
-    }).setOrigin(0.5).setScrollFactor(0);
-    this.pauseMenu.add(this.skillSelector);
-
-    this.pauseMenu.setDepth(1000);
-    
-}
-
-
-
-hidePauseMenu() {
-    if (this.pauseMenu) {
-        this.pauseMenu.destroy(true); // détruit tout ce qu'il contient (bg, textes, selector, etc.)
-        this.pauseMenu = null;
-        this.skillMenuTexts = [];
-        this.skillPointsText = null;
-        this.skillSelector = null;
-        this.bg = null;
-    }
-    // Réafficher HUD HTML
-    let hud = document.getElementById("hud-level");
-    if (hud) hud.style.display = "";
-    let hud1 = document.getElementById("hud-points");
-    if (hud1) hud1.style.display = "";
-}
 
 
 
@@ -1779,6 +1809,250 @@ isWeaponUnlocked(index) {
     if (index === 2) return this.skills.Mobilité >= 3;
     return false;
 }
+
+
+// --- CREATION DU MENU PAUSE ---
+showPauseMenu() {
+    const centerX = this.cameras.main.width / 2;
+    const centerY = this.cameras.main.height / 2;
+
+    this.pauseMenu = this.add.container(centerX, centerY);
+
+    
+    let hud = document.getElementById("hud-level");
+    if (hud) hud.style.display = "none";
+    let hud1 = document.getElementById("hud-points");
+    if (hud1) hud1.style.display = "none";
+    let hud2 = document.getElementById("hud-gold");
+    if (hud2) hud2.style.display = "none";
+
+    // Fond semi-transparent
+    this.bg = this.add.rectangle(
+        0, 0,
+        this.cameras.main.width,
+        this.cameras.main.height,
+        0x000000,
+        0.7
+    ).setOrigin(0.5).setScrollFactor(0);
+    this.pauseMenu.add(this.bg);
+
+    // Boutons (comme dans le menu principal mais adaptés)
+    this.menuButtons = [];
+    const spacing = 120; // espacement vertical entre boutons
+    const caca = 120;
+
+
+    // 1. Bouton Contrôles
+    this.boutonControles = this.createButton(0, -spacing + caca, "boutonControles", () => {
+        this.showPage(this.pageControles, this.retour1);
+    }, 0.3).setScrollFactor(0);
+    this.menuButtons.push(this.boutonControles);
+
+    // 2. Bouton Skills
+this.boutonSkills = this.createButton(0, 0 + caca, "boutonSkills", () => {
+    this.showPage(this.pageSkills, this.retour2);
+}, 0.3).setScrollFactor(0);
+this.menuButtons.push(this.boutonSkills);
+
+
+    // 3. Bouton Retour au jeu
+    this.boutonRetourJeu = this.createButton(0, spacing + caca, "boutonRetour", () => {
+        // Simule appui sur L
+        this.isPause = false;
+        this.physics.world.resume();
+        this.time.paused = false;
+        this.hidePauseMenu();
+        this.isDansMenu = false;
+    }, 0.3).setScrollFactor(0);
+    this.menuButtons.push(this.boutonRetourJeu);
+
+    this.pauseMenu.add(this.menuButtons);
+
+    // --- PAGES ---
+// Page Contrôles
+this.pageControles = this.add.container(0, 0).setVisible(false);
+
+const controlesBG = this.add.image(-centerX, -centerY, "pageControles") 
+   .setOrigin(0, 0) 
+   .setDisplaySize(this.cameras.main.width, this.cameras.main.height)
+   .setScrollFactor(0);
+
+this.retour1 = this.createButton(centerX/2 - 350, centerY - 70, "boutonRetour", () => this.hidePages(), 0.3);
+this.pageControles.add([controlesBG, this.retour1]);
+this.pageControles.setDepth(2000).setScrollFactor(0);
+this.pauseMenu.add(this.pageControles);
+this.retour1.setDepth(2001).setScrollFactor(0);
+
+// Page Skills
+this.pageSkills = this.add.container(0, 0).setVisible(false);
+
+const skillsBG = this.add.image(-centerX, -centerY, "pageSkills") 
+   .setOrigin(0, 0) 
+   .setDisplaySize(this.cameras.main.width, this.cameras.main.height)
+   .setScrollFactor(0);
+
+this.retour2 = this.createButton(centerX/2 - 330, centerY - 70, "boutonRetour", () => {
+    this.hidePages(); // ferme la page Skills
+    this.activeButtons = this.menuButtons; // réactive les boutons du menu pause
+    this.selectedIndex = 0;
+    this.updateButtonSelection();
+}, 0.3);
+
+this.pageSkills.add([skillsBG, this.retour2]);
+this.pageSkills.setDepth(2000).setScrollFactor(0);
+this.pauseMenu.add(this.pageSkills);
+this.retour2.setDepth(2001).setScrollFactor(0);
+// Ajouter le bouton Retour à la sélection avec les skills
+this.skillSelectorButtons = [...this.skillKeys.map(k => k), this.retour2];
+
+// --- ICI --- Crée la flèche pour la sélection des skills
+this.skillSelector = this.add.image(85, -50, "fleche").setOrigin(0.5, 0.5).setScale(0.5);
+this.pageSkills.add(this.skillSelector);
+
+    // Active la navigation clavier
+    this.activeButtons = this.menuButtons;
+    this.selectedIndex = 0;
+    this.updateButtonSelection();
+
+    this.pauseMenu.setDepth(1000);
+}
+
+// --- DETRUIRE LE MENU PAUSE ---
+hidePauseMenu() {
+    if (this.pauseMenu) {
+        this.pauseMenu.destroy(true);
+        this.pauseMenu = null;
+    }
+    this.pageControles = null;
+    this.activeButtons = [];
+    this.selectedIndex = 0;
+
+    let hud = document.getElementById("hud-level");
+    if (hud) hud.style.display = "";
+    let hud1 = document.getElementById("hud-points");
+    if (hud1) hud1.style.display = "";
+    let hud2 = document.getElementById("hud-gold");
+    if (hud2) hud2.style.display = "";
+}
+
+// --- UTILITAIRES BOUTONS ---
+createButton(x, y, key, callback, scale = 1) {
+    const btn = this.add.image(x, y, key).setInteractive({ useHandCursor: true }).setScale(scale);
+    btn.callback = callback;
+
+    btn.on("pointerover", () => this.setSelectedButton(btn));
+    btn.on("pointerout", () => this.updateButtonSelection());
+    btn.on("pointerdown", () => callback());
+
+    return btn;
+}
+
+setSelectedButton(btn) {
+    const idx = this.activeButtons.indexOf(btn);
+    if (idx >= 0) {
+        this.selectedIndex = idx;
+        this.updateButtonSelection();
+    }
+}
+
+updateButtonSelection() {
+    this.activeButtons.forEach((btn, i) => {
+        if (btn && typeof btn.setScale === "function") {
+            if (btn === this.retour1 || btn === this.retour2) {
+                btn.setScale(0.3); // boutons retour toujours à taille fixe
+            } else {
+                btn.setScale(i === this.selectedIndex ? 0.4 * 1.2 : 0.4);
+            }
+        }
+    });
+}
+
+
+
+// --- GESTION DES PAGES ---
+showPage(page, retourBtn) {
+    this.menuButtons.forEach(btn => btn.setVisible(false));
+    page.setVisible(true);
+
+    if (page === this.pageSkills) {
+        this.skillUI_Menu.setVisible(true).setScrollFactor(0);
+        this.skillPointsUI_Menu.setVisible(true).setScrollFactor(0);
+
+        // Active toutes les options du selector : skills + retour
+        this.activeButtons = this.skillSelectorButtons;
+        this.selectedSkillIndex = 0;
+        this.updateSkillSelector(); // fonction qui déplace la flèche "skillSelector" sur l'option sélectionnée
+    } else {
+        this.activeButtons = [retourBtn];
+        this.selectedIndex = 0;
+        this.updateButtonSelection();
+    }
+}
+
+
+hidePages() {
+    if (this.pageControles) this.pageControles.setVisible(false);
+    if (this.pageSkills) {
+        this.pageSkills.setVisible(false);
+        this.skillUI_Menu.setVisible(false);
+        this.skillPointsUI_Menu.setVisible(false);
+    }
+
+    this.menuButtons.forEach(btn => btn.setVisible(true));
+    this.activeButtons = this.menuButtons;
+    this.selectedIndex = 0;
+    this.updateButtonSelection();
+}
+
+
+
+
+
+
+
+
+createSkillBars(container, barArray) {
+    const skillFrames = ["skill_1", "skill_2", "skill_3"];
+    for (let i = 0; i < this.skillKeys.length; i++) {
+        let offsetY = i * 70;
+        let barX = 85;
+        let barY = offsetY;
+        let barWidth = 121;
+        let barHeight = 20;
+
+        let barFill = this.add.graphics();
+        let barTicks = this.add.graphics();
+        barTicks.lineStyle(1, 0xffffae, 0.5);
+        for (let j = 1; j < 5; j++) {
+            let tickX = barX + (j / 5) * barWidth;
+            barTicks.lineBetween(tickX, barY - barHeight / 2, tickX, barY + barHeight / 2);
+        }
+
+        let frame = this.add.image(0, offsetY, skillFrames[i]).setOrigin(0, 0.5).setScale(0.65);
+
+        container.add([barFill, barTicks, frame]);
+        barArray.push({ barFill, barX, barY, barWidth, barHeight });
+    }
+}
+
+
+
+// Met à jour la flèche sur la skill ou le bouton Retour
+updateSkillSelector() {
+    // Y de base pour le premier skill
+    const startY = -50;
+    const spacing = 70; // espace entre chaque skill
+    this.skillSelector.y = startY + this.selectedSkillIndex * spacing;
+
+    // Si tu veux, tu peux aussi bouger X si Retour est à une position différente
+    if (this.selectedSkillIndex === this.skillSelectorButtons.length - 1) {
+        // dernière option = Retour
+        this.skillSelector.x = 150; // exemple : déplacer la flèche un peu à droite
+    } else {
+        this.skillSelector.x = 85; // X normal pour les skills
+    }
+}
+  
 
 
 }
