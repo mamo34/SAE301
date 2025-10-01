@@ -80,9 +80,9 @@ export default class selection extends Phaser.Scene {
     this.load.image("fleche", "./assets/fleche.png");
 
 
-    this.load.image("cadre_mana", "./assets/barre mana.png");
-    this.load.image("cadre_xp", "./assets/barre xp.png");
-    this.load.image("cadre_vie", "./assets/barre vie.png");
+    this.load.image("cadre_mana", "./assets/barre_mana.png");
+    this.load.image("cadre_xp", "./assets/barre_xp.png");
+    this.load.image("cadre_vie", "./assets/barre_vie.png");
     this.load.image("skills", "./assets/page_skills.png");
 
     this.load.tilemapTiledJSON("map1", "./src/map/map1.json");
@@ -1897,10 +1897,16 @@ const skillsBG = this.add.image(-centerX, -centerY, "pageSkills")
 
 this.retour2 = this.createButton(centerX/2 - 330, centerY - 70, "boutonRetour", () => {
     this.hidePages(); // ferme la page Skills
-    this.activeButtons = this.menuButtons; // réactive les boutons du menu pause
-    this.selectedIndex = 0;
+
+    // On réactive le menu pause
+    this.activeButtons = this.menuButtons;
+    this.selectedIndex = 0; // sélectionne le 1er bouton
     this.updateButtonSelection();
+
+    // ⚠️ petit délai pour éviter que la touche "I" se propage
+    this.time.delayedCall(100, () => {}, [], this);
 }, 0.3);
+
 
 this.pageSkills.add([skillsBG, this.retour2]);
 this.pageSkills.setDepth(2000).setScrollFactor(0);
