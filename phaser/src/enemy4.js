@@ -2,7 +2,7 @@ import Enemy from "./Enemy.js";
 
 export default class EnemyBowling extends Enemy {
   constructor(scene, x, y, target) {
-    super(scene, x, y, "img_enemyBowler", 1, target, 2, 1, 1);
+    super(scene, x, y, "img_enemyBowler", 1, target, 20, 1000, 1000, 1200);
 
     this.isPreparing = false;
     this.randomMoveTimer = 0;
@@ -78,23 +78,11 @@ export default class EnemyBowling extends Enemy {
     const direction = this.target.x < this.x ? -1 : 1;
     ball.setVelocityX(direction * 200);
 
-    // rotation continue pour simuler le roulement
+    // ⚡ rotation continue pour simuler le roulement
     ball.rotationSpeed = direction * 0.1;
-
-    // préupdate personnalisé pour rotation + despawn
-    ball.preUpdate = function(time, delta) {
-        Phaser.Physics.Arcade.Sprite.prototype.preUpdate.call(this, time, delta);
-
-        // rotation
-        this.rotation += this.rotationSpeed;
-
-        // vérifier limites du monde
-        const worldBounds = this.scene.physics.world.bounds;
-        if (this.x < worldBounds.x || this.x > worldBounds.width ||
-            this.y < worldBounds.y || this.y > worldBounds.height) {
-            this.destroy();
-        }
+    ball.preUpdate = function (time, delta) {
+      Phaser.Physics.Arcade.Sprite.prototype.preUpdate.call(this, time, delta);
+      this.rotation += this.rotationSpeed;
     };
-}
-
+  }
 }

@@ -13,8 +13,8 @@ export default class selection extends Phaser.Scene {
 
     this.degatPlayerCorpsAcorps = 2;
 
-    this.baseXP = 15;
-    this.growth = 1.5;
+    this.baseXP = 10;
+    this.growth = 1.2;
     this.playerLevel = 0;
     this.playerXP = 0;
 
@@ -752,7 +752,7 @@ this.physics.add.collider(this.enemy12, this.platformLayer);
     if (this.enemy11.startPatrol) this.enemy11.startPatrol(1600, 2500, 70);
     if (this.enemy12.startPatrol) this.enemy12.startPatrol(200, 1000, 70);
 
-    
+
   
   
     // Créer un groupe avec les ennemis existants
@@ -1178,11 +1178,11 @@ this.player.hasWeapon = false;
 
   // --- PET ---
 
-  if (this.skills["Survie"] === 1 && !this.pet) {
+  if (this.skills["Survie"] >= 1 && !this.pet) {
   this.spawnPet();
 }
 
-  if (this.skills["Survie"] >= 1) {
+  if (this.skills["Survie"] >= 1 && this.pet) {
 
   const speed = 120;
   const detectionRadius = 150;
@@ -1843,7 +1843,7 @@ this.menuTitleBG = this.add.image(0, 0, "title")
     .setDisplaySize(this.cameras.main.width, this.cameras.main.height); // pour couvrir l’écran
 
 this.pauseMenu.add(this.menuTitleBG);
-  
+
 
     // Boutons (comme dans le menu principal mais adaptés)
     this.menuButtons = [];
@@ -1900,7 +1900,7 @@ const skillsBG = this.add.image(-centerX, -centerY, "skills")
    .setDisplaySize(this.cameras.main.width, this.cameras.main.height)
    .setScrollFactor(0);
 
-this.retour2 = this.createButton(centerX/2 - 330, centerY - 70, "boutonRetour", () => {
+this.retour2 = this.createButton(centerX/2 -10, centerY - 180, "boutonRetour", () => {
     this.hidePages(); // ferme la page Skills
 
     // On réactive le menu pause
