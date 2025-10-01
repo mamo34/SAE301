@@ -78,6 +78,7 @@ export default class selection extends Phaser.Scene {
     this.load.image("img_potion", "./assets/fiole.png");
     this.load.image("img_gold", "./assets/engrenage.png");
     this.load.image("fleche", "./assets/fleche.png");
+    this.load.image("title", "./assets/title.png");
 
 
     this.load.image("cadre_mana", "./assets/barre_mana.png");
@@ -626,54 +627,6 @@ this.input.keyboard.on('keydown-O', () => {
 
 
 
-this.input.keyboard.on('keydown', (event) => {
-    if (!this.isPause) return;
-
-    // Si on est sur la page Skills
-    if (this.pageSkills && this.pageSkills.visible) {
-        // navigation avec flèche
-        if (event.key === "ArrowUp") {
-            if (this.selectedSkillIndex > 0) {
-                this.selectedSkillIndex--;
-                this.updateSkillSelector();
-            }
-        } else if (event.key === "ArrowDown") {
-            if (this.selectedSkillIndex < this.skillSelectorButtons.length - 1) {
-                this.selectedSkillIndex++;
-                this.updateSkillSelector();
-            }
-        }
-
-        // ACTION : touche I
-        if (event.key.toLowerCase() === "i") {
-            const selected = this.skillSelectorButtons[this.selectedSkillIndex];
-
-            if (typeof selected === "string") {
-                // skill normal (ton code existant)
-                let skill = selected;
-                if (this.skillPoints > 0 && this.skills[skill] < this.maxSkillLevel) {
-                    this.skills[skill]++;
-                    this.skillPoints--;
-                    this.updateSkillUI(this.selectedSkillIndex);
-                    this.updatePointsHUD(this.skillPoints);
-                }
-                if (skill === "Armes") {
-                    this.weaponModes = ['melee'];
-                    if (this.skills.Armes >= 1) this.weaponModes.push('gun')
-                    refreshWeaponUI();
-                }
-            } else if (selected && typeof selected.callback === "function") {
-                // 4ème option = bouton retour2 -> appelle son callback
-                selected.callback();
-
-                // assure-toi que le menu principal est réactivé
-                this.activeButtons = this.menuButtons;
-                this.selectedIndex = 0;
-                this.updateButtonSelection();
-            }
-        }
-    }
-});
 
 
 
@@ -1041,48 +994,89 @@ map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset
   }
 
   update() {
-// Toggle pause avec L
-// --- Gestion du toggle pause ---
+    // --- Gestion de la touche L (Pause / Reprise) ---
     if (Phaser.Input.Keyboard.JustDown(this.pauseKey)) {
-    // Bloque L si on est dans une page interne (Contrôles OU Skills)
-    if (this.pageControles?.visible || this.pageSkills?.visible) {
-        return; // on ne ferme pas avec L
+        // Bloque L si une page interne est ouverte (Contrôles ou Skills)
+        if (this.pageControles?.visible || this.pageSkills?.visible) {
+            return; // on ne ferme pas avec L quand on est dans une sous-page
+        }
+
+        this.isPause = !this.isPause;
+
+        if (this.isPause) {
+            this.physics.world.pause();
+            this.time.paused = true;
+            this.showPauseMenu();
+            this.isDansMenu = true;
+        } else {
+            this.physics.world.resume();
+            this.time.paused = false;
+            this.hidePauseMenu();
+            this.isDansMenu = false;
+        }
     }
 
-    this.isPause = !this.isPause;
+    // --- Si on est dans le menu pause ET page Skills visible ---
+    if (this.isDansMenu && this.pageSkills && this.pageSkills.visible) {
+        if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
+            this.selectedSkillIndex = Math.min(this.selectedSkillIndex + 1, this.skillSelectorButtons.length - 1);
+            this.updateSkillSelector();
+        } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
+            this.selectedSkillIndex = Math.max(this.selectedSkillIndex - 1, 0);
+            this.updateSkillSelector();
+        }
 
-    if (this.isPause) {
-        this.physics.world.pause();
-        this.time.paused = true;
-        this.showPauseMenu();
-        this.isDansMenu = true;   // ✅ on active la navigation menu
-    } else {
-        this.physics.world.resume();
-        this.time.paused = false;
-        this.hidePauseMenu();
-        this.isDansMenu = false;  // ✅ retour au jeu
+        if (Phaser.Input.Keyboard.JustDown(this.keyI)) {
+            const selected = this.skillSelectorButtons[this.selectedSkillIndex];
+
+            if (typeof selected === "string") {
+                // Skill normal
+                let skill = selected;
+                if (this.skillPoints > 0 && this.skills[skill] < this.maxSkillLevel) {
+                    this.skills[skill]++;
+                    this.skillPoints--;
+                    this.updateSkillUI(this.selectedSkillIndex);
+                    this.updatePointsHUD(this.skillPoints);
+                    
+                    this.refreshWeaponUI();
+                }
+
+                if (skill === "Armes") {
+                    this.weaponModes = ['melee'];
+                    if (this.skills.Armes >= 1) this.weaponModes.push('gun');
+                    this.refreshWeaponUI();
+                }
+            } else if (selected && typeof selected.callback === "function") {
+                // Bouton retour2 → appelle le callback
+                selected.callback();
+
+                // Réactive le menu pause
+                this.activeButtons = this.menuButtons;
+                this.selectedIndex = 0;
+                this.updateButtonSelection();
+            }
+        }
+
+        return; // 🚪 stop ici → on ne retombe pas dans la nav du menu principal
     }
-}
 
+    // --- Si on est dans le menu pause mais pas dans Skills ---
+    if (this.isDansMenu && (!this.pageSkills || !this.pageSkills.visible)) {
+        if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
+            this.selectedIndex = (this.selectedIndex + 1) % this.activeButtons.length;
+            this.updateButtonSelection();
+        } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
+            this.selectedIndex = (this.selectedIndex - 1 + this.activeButtons.length) % this.activeButtons.length;
+            this.updateButtonSelection();
+        }
 
+        if (Phaser.Input.Keyboard.JustDown(this.keyI)) {
+            const btn = this.activeButtons[this.selectedIndex];
+            if (btn.callback) btn.callback();
+        }
 
-    // --- Si on est dans le menu pause, gérer navigation ---
-if (this.isDansMenu && !this.pageSkills.visible) {
-    if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
-        this.selectedIndex = (this.selectedIndex + 1) % this.activeButtons.length;
-        this.updateButtonSelection();
-    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
-        this.selectedIndex = (this.selectedIndex - 1 + this.activeButtons.length) % this.activeButtons.length;
-        this.updateButtonSelection();
+        return; // 🚪 stop ici → bloque les contrôles joueur tant qu'on est dans le menu
     }
-
-    if (Phaser.Input.Keyboard.JustDown(this.keyI)) {
-        const btn = this.activeButtons[this.selectedIndex];
-        if (btn.callback) btn.callback();
-    }
-
-    return; // bloque les contrôles du joueur
-}
 
 
     // --- Sinon, logique du joueur habituelle ---
@@ -1832,14 +1826,24 @@ showPauseMenu() {
     if (hud2) hud2.style.display = "none";
 
     // Fond semi-transparent
-    this.bg = this.add.rectangle(
-        0, 0,
-        this.cameras.main.width,
-        this.cameras.main.height,
-        0x000000,
-        0.7
-    ).setOrigin(0.5).setScrollFactor(0);
-    this.pauseMenu.add(this.bg);
+this.bg = this.add.rectangle(
+    0, 0,
+    this.cameras.main.width,
+    this.cameras.main.height,
+    0x000000,
+    0.7
+).setOrigin(0.5).setScrollFactor(0);
+this.pauseMenu.add(this.bg);
+
+// ✅ Image "title" en fond du menu
+this.menuTitleBG = this.add.image(0, 0, "title")
+    .setOrigin(0.5)
+    .setScrollFactor(0)
+    .setDepth(1000) // optionnel : pour le placer au-dessus du fond noir mais derrière les boutons
+    .setDisplaySize(this.cameras.main.width, this.cameras.main.height); // pour couvrir l’écran
+
+this.pauseMenu.add(this.menuTitleBG);
+  
 
     // Boutons (comme dans le menu principal mais adaptés)
     this.menuButtons = [];
