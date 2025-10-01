@@ -659,7 +659,8 @@ this.input.keyboard.on('keydown', (event) => {
                 }
                 if (skill === "Armes") {
                     this.weaponModes = ['melee'];
-                    if (this.skills.Armes >= 1) this.weaponModes.push('gun');
+                    if (this.skills.Armes >= 1) this.weaponModes.push('gun')
+                    refreshWeaponUI();
                 }
             } else if (selected && typeof selected.callback === "function") {
                 // 4ème option = bouton retour2 -> appelle son callback
@@ -1890,7 +1891,7 @@ this.retour1.setDepth(2001).setScrollFactor(0);
 // Page Skills
 this.pageSkills = this.add.container(0, 0).setVisible(false);
 
-const skillsBG = this.add.image(-centerX, -centerY, "pageSkills") 
+const skillsBG = this.add.image(-centerX, -centerY, "skills") 
    .setOrigin(0, 0) 
    .setDisplaySize(this.cameras.main.width, this.cameras.main.height)
    .setScrollFactor(0);
