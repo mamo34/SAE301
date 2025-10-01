@@ -15,7 +15,7 @@ export default class debut extends Phaser.Scene {
 
     // Pages
     this.load.image("pageControles", "./assets/commandes.png");
-    this.load.image("pageCredits", "./assets/credits.jpg");
+    this.load.image("pageCredits", "./assets/credits.png");
   }
 
   create() {
@@ -58,7 +58,7 @@ export default class debut extends Phaser.Scene {
 
     // Boutons retour
     this.retour1 = this.createButton(centerX, centerY + 290, "boutonRetour", () => this.hidePages(), buttonScale);
-    this.retour2 = this.createButton(centerX, centerY + 290, "boutonRetour", () => this.hidePages(), buttonScale);
+    this.retour2 = this.createButton(centerX, centerY + 305, "boutonRetour", () => this.hidePages(), buttonScale);
 
     this.pageControles.add([controlesBG, this.retour1]);
     this.pageCredits.add([creditsBG, this.retour2]);

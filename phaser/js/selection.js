@@ -83,7 +83,7 @@ export default class selection extends Phaser.Scene {
     this.load.image("cadre_mana", "./assets/barre mana.png");
     this.load.image("cadre_xp", "./assets/barre xp.png");
     this.load.image("cadre_vie", "./assets/barre vie.png");
-    this.load.image("skills", "./assets/skills.png");
+    this.load.image("skills", "./assets/page_skills.png");
 
     this.load.tilemapTiledJSON("map1", "./src/map/map1.json");
     this.load.image("tiles1", "./src/map/background_1.png");
@@ -629,44 +629,48 @@ this.input.keyboard.on('keydown-O', () => {
 this.input.keyboard.on('keydown', (event) => {
     if (!this.isPause) return;
 
-    if (this.pageSkills.visible) {
+    // Si on est sur la page Skills
+    if (this.pageSkills && this.pageSkills.visible) {
         // navigation avec flèche
         if (event.key === "ArrowUp") {
-  if (this.selectedSkillIndex > 0) {
-    this.selectedSkillIndex--;
-    this.updateSkillSelector();
-  }
-} else if (event.key === "ArrowDown") {
-  if (this.selectedSkillIndex < 3) {  // 3 correspond au 4e bouton, le bouton retour
-    this.selectedSkillIndex++;
-    this.updateSkillSelector();
-  }
-}
-
-
- else if (event.key.toLowerCase() === "i" && this.activePage === this.pageSkills) {
-    const selected = this.skillSelectorButtons[this.selectedSkillIndex];
-    
-    if (typeof selected === "string") {
-        // c'est un skill normal
-        let skill = selected;
-        if (this.skillPoints > 0 && this.skills[skill] < this.maxSkillLevel) {
-            this.skills[skill]++;
-            this.skillPoints--; 
-            this.updateSkillUI(this.selectedSkillIndex);
-            this.updatePointsHUD(this.skillPoints);
+            if (this.selectedSkillIndex > 0) {
+                this.selectedSkillIndex--;
+                this.updateSkillSelector();
+            }
+        } else if (event.key === "ArrowDown") {
+            if (this.selectedSkillIndex < this.skillSelectorButtons.length - 1) {
+                this.selectedSkillIndex++;
+                this.updateSkillSelector();
+            }
         }
 
-        if (skill === "Armes") {
-            this.weaponModes = ['melee'];
-            if (this.skills.Armes >= 1) this.weaponModes.push('gun');
-        }
+        // ACTION : touche I
+        if (event.key.toLowerCase() === "i") {
+            const selected = this.skillSelectorButtons[this.selectedSkillIndex];
 
-    } else if (selected && typeof selected.callback === "function") {
-        // c'est un bouton (retour2)
-        selected.callback();
-    }
-}
+            if (typeof selected === "string") {
+                // skill normal (ton code existant)
+                let skill = selected;
+                if (this.skillPoints > 0 && this.skills[skill] < this.maxSkillLevel) {
+                    this.skills[skill]++;
+                    this.skillPoints--;
+                    this.updateSkillUI(this.selectedSkillIndex);
+                    this.updatePointsHUD(this.skillPoints);
+                }
+                if (skill === "Armes") {
+                    this.weaponModes = ['melee'];
+                    if (this.skills.Armes >= 1) this.weaponModes.push('gun');
+                }
+            } else if (selected && typeof selected.callback === "function") {
+                // 4ème option = bouton retour2 -> appelle son callback
+                selected.callback();
+
+                // assure-toi que le menu principal est réactivé
+                this.activeButtons = this.menuButtons;
+                this.selectedIndex = 0;
+                this.updateButtonSelection();
+            }
+        }
     }
 });
 
