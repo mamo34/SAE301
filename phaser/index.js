@@ -1,6 +1,7 @@
 // chargement des librairies
 import selection from "./js/selection.js";
 import debut from "./js/debut.js";
+import tutoriel from "./js/tutoriel.js";
 
 // configuration générale du jeu
 var config = {
@@ -21,10 +22,10 @@ var config = {
       gravity: {
         y: 300 // gravité verticale : acceleration ddes corps en pixels par seconde
       },
-      debug: true // afficher les hitbox et vecteurs
+      debug: false // afficher les hitbox et vecteurs
     }
   },
-  scene: [debut, selection],
+  scene: [debut, tutoriel, selection],
   baseURL: window.location.pathname.replace(/\/[^/]*$/, '')
 };
 

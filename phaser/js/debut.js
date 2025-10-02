@@ -12,6 +12,8 @@ export default class debut extends Phaser.Scene {
     this.load.image("boutonControles", "./assets/boutoncontroles.png");
     this.load.image("boutonCredits", "./assets/boutoncredit.png");
     this.load.image("boutonRetour", "./assets/boutonretour.png");
+    this.load.image("oui", "./assets/oui.png");
+    this.load.image("non", "./assets/non.png");
 
     // Pages
     this.load.image("pageControles", "./assets/commandes.jpg");
@@ -19,6 +21,7 @@ export default class debut extends Phaser.Scene {
   }
 
   create() {
+    this.currentMode = "menu";
     const centerX = this.cameras.main.width / 2;
     const centerY = this.cameras.main.height / 2;
 
@@ -33,7 +36,7 @@ export default class debut extends Phaser.Scene {
     this.menuButtons = [];
 
     this.boutonJouer = this.createButton(centerX + offsetX, offsetY, "boutonJouer", () => {
-      this.scene.start("selection");
+      
     }, buttonScale);
     this.menuButtons.push(this.boutonJouer);
 
@@ -71,22 +74,69 @@ export default class debut extends Phaser.Scene {
     this.activeButtons = this.menuButtons;
     this.selectedIndex = 0;
     this.updateButtonSelection();
+
+
+
+
+    //TUTO
+    this.askTutorialContainer = this.add.container(0, 0).setVisible(false);
+    this.askTutorialBg = this.add.rectangle(centerX, centerY, 400, 200, 0x000000, 0.7);
+    this.askTutorialText = this.add.text(centerX, centerY - 50, "Veux-tu ignorer le tutoriel ?", {
+        fontSize: "24px",
+        color: "#ffffff",
+        fontFamily: "Arial",
+    }).setOrigin(0.5);
+
+    this.btnOui = this.createButton(centerX - 80, centerY + 40, "oui", () => this.startSelection(), 0.4);
+    this.btnNon = this.createButton(centerX + 80, centerY + 40, "non", () => this.startTutorial(), 0.4);
+
+    // On stocke les boutons pour navigation clavier
+    this.askButtons = [this.btnOui, this.btnNon];
+    this.askSelectedIndex = 0;
+    
+
+    // Ajout au container
+    this.askTutorialContainer.add([this.askTutorialBg, this.askTutorialText, this.btnOui, this.btnNon]);
+
+    // --- Nouvelle fonction pour l'animation du menu principal ---
+    this.boutonJouer.callback = () => this.showTutorialPrompt();
+
   }
 
   update() {
-    if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
-      this.selectedIndex = (this.selectedIndex + 1) % this.activeButtons.length;
-      this.updateButtonSelection();
-    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
-      this.selectedIndex = (this.selectedIndex - 1 + this.activeButtons.length) % this.activeButtons.length;
-      this.updateButtonSelection();
-    }
+    if (this.currentMode === "menu") {
+        // --- Main menu navigation (up/down + I) ---
+        if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
+            this.selectedIndex = (this.selectedIndex + 1) % this.activeButtons.length;
+            this.updateButtonSelection();
+        } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
+            this.selectedIndex = (this.selectedIndex - 1 + this.activeButtons.length) % this.activeButtons.length;
+            this.updateButtonSelection();
+        }
 
-    if (Phaser.Input.Keyboard.JustDown(this.keyI)) {
-      const btn = this.activeButtons[this.selectedIndex];
-      if (btn.callback) btn.callback();
+        if (Phaser.Input.Keyboard.JustDown(this.keyI)) {
+            const btn = this.activeButtons[this.selectedIndex];
+            if (btn.callback) btn.callback();
+        }
+    } 
+    
+    else if (this.currentMode === "ask") {
+        // --- Tutorial prompt navigation (left/right + I) ---
+        if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
+            this.askSelectedIndex = (this.askSelectedIndex - 1 + this.askButtons.length) % this.askButtons.length;
+            this.updateAskSelection();
+        } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
+            this.askSelectedIndex = (this.askSelectedIndex + 1) % this.askButtons.length;
+            this.updateAskSelection();
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this.keyI)) {
+            const btn = this.askButtons[this.askSelectedIndex];
+            if (btn.callback) btn.callback();
+        }
     }
-  }
+}
+
 
   createButton(x, y, key, callback, scale = 1) {
     const btn = this.add.image(x, y, key).setInteractive({ useHandCursor: true }).setScale(scale);
@@ -94,7 +144,10 @@ export default class debut extends Phaser.Scene {
 
     btn.on("pointerover", () => this.setSelectedButton(btn));
     btn.on("pointerout", () => this.updateButtonSelection());
-    btn.on("pointerdown", () => callback());
+    btn.on("pointerdown", () => {
+      this.setSelectedButton(btn);
+      if (btn.callback) btn.callback();
+    });
 
     return btn;
   }
@@ -108,15 +161,16 @@ export default class debut extends Phaser.Scene {
   }
 
   updateButtonSelection() {
-  this.activeButtons.forEach((btn, i) => {
-    // Si c'est un bouton retour, on garde sa taille initiale
-    if (btn === this.retour1 || btn === this.retour2) {
-      btn.setScale(0.3); // taille originale
-    } else {
-      btn.setScale(i === this.selectedIndex ? 1.2 * 0.4 : 0.4);
-    }
-  });
+    this.activeButtons.forEach((btn, i) => {
+        const isSelected = i === this.selectedIndex;
+        if (btn === this.retour1 || btn === this.retour2) {
+            btn.setScale(isSelected ? 0.35 : 0.3);
+        } else {
+            btn.setScale(isSelected ? 0.5 : 0.4);
+        }
+    });
 }
+
 
 
   showPage(page, retourBtn) {
@@ -127,6 +181,7 @@ export default class debut extends Phaser.Scene {
     this.activeButtons = [retourBtn];
     this.selectedIndex = 0;
     this.updateButtonSelection();
+    this.currentMode = "menu";
   }
 
   hidePages() {
@@ -138,5 +193,51 @@ export default class debut extends Phaser.Scene {
     this.activeButtons = this.menuButtons;
     this.selectedIndex = 0;
     this.updateButtonSelection();
+    this.currentMode = "menu";
   }
+
+  showTutorialPrompt() {
+    // Slide des boutons du menu principal vers la droite
+    this.menuButtons.forEach(btn => {
+        this.tweens.add({
+            targets: btn,
+            x: this.cameras.main.width + 200,
+            duration: 500,
+            ease: 'Cubic.easeInOut'
+        });
+    });
+
+    // Slide du rectangle semi-transparent depuis la gauche
+    this.askTutorialContainer.setVisible(true);
+    this.askTutorialContainer.x = -this.cameras.main.width;
+    this.tweens.add({
+        targets: this.askTutorialContainer,
+        x: 0,
+        duration: 500,
+        ease: 'Cubic.easeInOut'
+    });
+
+    // Active la navigation clavier sur OUI/NON
+    this.activeButtons = this.askButtons;
+    this.askSelectedIndex = 0;
+    this.updateAskSelection();
+    this.currentMode = "ask";
 }
+
+// Navigation clavier pour OUI/NON
+updateAskSelection() {
+    this.askButtons.forEach((btn, i) => {
+        btn.setScale(i === this.askSelectedIndex ? 0.5 : 0.4);
+    });
+}
+
+startSelection() {
+    this.scene.start("selection");
+}
+
+startTutorial() {
+    this.scene.start("tutoriel");
+}
+
+}
+

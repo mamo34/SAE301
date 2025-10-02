@@ -807,7 +807,7 @@ while (this.playerXP >= this.xpForNextLevel(this.playerLevel)) {
 
 
 
-    this.tesla1 = new Tesla(this, 600, 300, this.player);  // x=600, y=300
+    this.tesla1 = new Tesla(this, 600, 1200, this.player);
     this.add.existing(this.tesla1);
 
     // Ajouter collision entre le joueur et la Tesla (facultatif si tu veux bloquer le joueur)
@@ -932,12 +932,12 @@ this.teleportA = this.add.rectangle(3440, 700, 50, 100);
 this.physics.add.existing(this.teleportA, true);
 
 // Téléporteur B
-this.teleportB = this.add.rectangle(130, 1920, 100, 100);
+this.teleportB = this.add.rectangle(150, 1920, 100, 100);
 this.physics.add.existing(this.teleportB, true);
 
 // Pour debug → affiche en rouge (tu peux commenter après)
-this.teleportA.setFillStyle?.(0xff0000, 0.3);
-this.teleportB.setFillStyle?.(0x0000ff, 0.3);
+//this.teleportA.setFillStyle?.(0xff0000, 0.3);
+//this.teleportB.setFillStyle?.(0x0000ff, 0.3);
 
 // Flag pour savoir si le joueur est dedans
 this.currentTeleportZone = null;
@@ -1787,7 +1787,7 @@ attackMelee() {
         hitboxWidth,
         hitboxHeight,
         0xff0000,
-        0.3
+        0
     );
     this.physics.add.existing(hitbox);
     hitbox.body.allowGravity = false;
