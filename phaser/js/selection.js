@@ -185,7 +185,7 @@ this.hit = this.sound.add('hit', { volume: 0.5, loop: false });
 this.click = this.sound.add('click', { volume: 0.5, loop: false });
 this.select = this.sound.add('select', { volume: 0.5, loop: false });
 this.skill = this.sound.add('skill', { volume: 0.5, loop: false });
-this.sfxOwl = this.sound.add("sfxOwl", { volume: 0.5, loop: false });
+this.sfxOwl = this.sound.add("sfxOwl", { volume: 0.8, loop: false });
 this.mdr = this.sound.add("mdr", { volume: 5, loop: false });
 
     
@@ -1334,9 +1334,6 @@ this.player.hasWeapon = false;
 }
 
   // --- PET ---
-  if(this.skills["Survie"]>=1){
-    this.scheduleOwlSound();
-  }
 
   if (this.skills["Survie"] >= 1 && !this.pet) {
   this.spawnPet();
@@ -2372,6 +2369,7 @@ applySurvieStats() {
     // --- NIVEAUX ---
     if (lvl >= 1 && !this.pet) {
         this.spawnPet(); // lvl 1 → spawn pet
+        this.scheduleOwlSound();
     }
 
     if (lvl >= 2) {
