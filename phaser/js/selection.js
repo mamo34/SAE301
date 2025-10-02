@@ -155,7 +155,7 @@ this.load.image("boutonControles", "./assets/boutoncontroles.png");
     this.load.audio("whoosh", "./assets/musique_sfx/whoosh.mp3");
     this.load.audio("hit", "./assets/musique_sfx/hit.mp3");
     this.load.audio("skill", "./assets/musique_sfx/skill.mp3");
-    this.load.audio("owl", "./assets/musique_sfx/owl.mp3");
+    this.load.audio("sfxOwl", "./assets/musique_sfx/owl.mp3");
     this.load.audio("ouch", "./assets/musique_sfx/ouch.mp3");
     this.load.audio("mdr", "./assets/musique_sfx/mdr.mp3");
 
@@ -185,7 +185,7 @@ this.hit = this.sound.add('hit', { volume: 0.5, loop: false });
 this.click = this.sound.add('click', { volume: 0.5, loop: false });
 this.select = this.sound.add('select', { volume: 0.5, loop: false });
 this.skill = this.sound.add('skill', { volume: 0.5, loop: false });
-this.owl = this.sound.add("owl", { volume: 0.5, loop: false });
+this.sfxOwl = this.sound.add("sfxOwl", { volume: 0.5, loop: false });
 this.mdr = this.sound.add("mdr", { volume: 5, loop: false });
 
     
