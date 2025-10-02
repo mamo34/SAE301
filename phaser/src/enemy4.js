@@ -2,7 +2,7 @@ import Enemy from "./Enemy.js";
 
 export default class EnemyBowling extends Enemy {
   constructor(scene, x, y, target) {
-    super(scene, x, y, "img_enemyBowler", 1, target, 20, 1000, 1000, 1200);
+    super(scene, x, y, "img_enemyBowler", 10, target, 20, 1000, 1000, 1200);
 
     this.isPreparing = false;
     this.randomMoveTimer = 0;

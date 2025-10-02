@@ -2,7 +2,7 @@ import Enemy from "./Enemy.js";
 
 export default class EnemyCone extends Enemy {
   constructor(scene, x, y, target) {
-    super(scene, x, y, "img_enemy2", 1, target, 50, 5, 10); 
+    super(scene, x, y, "img_enemy2", 5, target, 50, 5, 10); 
     this.isAttacking = false; // éviter de relancer pendant qu'il prépare
     this.startShooting();
   }

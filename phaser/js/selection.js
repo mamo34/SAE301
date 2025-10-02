@@ -18,6 +18,17 @@ export default class selection extends Phaser.Scene {
     this.playerLevel = 0;
     this.playerXP = 0;
 
+    this.gunFireRate = 500; // ms entre 2 tirs par défaut
+this.gunRange = 370;    // portée par défaut
+this.lastShotTime = 0;  // timestamp du dernier tir
+this.playerSpeed = 120;         // vitesse horizontale de base
+    this.playerJump = 160;          // saut de base
+    this.hasDash = false;           // dash désactivé
+    this.hasJetpack = false;        // jetpack désactivé
+    this.dashManaCost = 5;          // coût du dash
+    this.jetpackManaCost = 5; 
+
+
     // Branches de compétences
     this.skills = {
         Armes: 0,
@@ -84,7 +95,7 @@ export default class selection extends Phaser.Scene {
     this.load.image("cadre_mana", "./assets/barre_mana.png");
     this.load.image("cadre_xp", "./assets/barre_xp.png");
     this.load.image("cadre_vie", "./assets/barre_vie.png");
-    this.load.image("skills", "./assets/page_skills.png");
+    this.load.image("skills", "./assets/page_skills.jpg");
 
     this.load.tilemapTiledJSON("map1", "./src/map/map1.json");
     this.load.image("tiles1", "./src/map/background_1.png");
@@ -140,6 +151,8 @@ WebFont.load({
 
     const centerX = this.cameras.main.width / 2;
   const centerY = this.cameras.main.height / 2;
+
+  
     
     // ÉTAT DE SCÈNE
     this.gameOver = false;
@@ -370,6 +383,85 @@ this.updatePointsHUD = (points) => {
   hudPoints.querySelector('.points-grad').textContent = `Points: ${points}`;
 };
 
+
+
+// --- Injecter CSS pour le HUD Skills ---
+if (!document.getElementById('hud-skills-style')) {
+  const style = document.createElement('style');
+  style.id = 'hud-skills-style';
+  style.textContent = `
+    .hud-skills {
+      position: absolute;
+      bottom: 150px; /* positionne en haut de la page Skills */
+      left: 250px;
+      pointer-events: none;
+      z-index: 9999;
+      isolation: isolate;
+      font-size: 70px;
+      font-family: 'The Sign Shop', sans-serif;
+      font-weight: 700;
+      text-align: right;
+      line-height: 1.2;
+      display: none;
+    }
+
+    .hud-skills .skills-outline {
+      color: transparent;
+      -webkit-text-stroke: 3px rgba(49,22,0,0.8);
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 0;
+      filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.6));
+    }
+
+    .hud-skills .skills-base {
+      color: #fff;
+      position: relative;
+      z-index: 1;
+      filter: invert(1);
+      display: block;
+    }
+
+    .hud-skills .skills-grad {
+      position: absolute;
+      left: 0; right: 0; top: 0; bottom: 0;
+      z-index: 2;
+      background: linear-gradient(to bottom, rgba(255,184,104,1), rgba(120,60,20,1));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      mix-blend-mode: lighten;
+      pointer-events: none;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// --- Créer le container HUD Skills ---
+let hudSkills = document.getElementById('hud-skills');
+if (!hudSkills) {
+  hudSkills = document.createElement('div');
+  hudSkills.id = 'hud-skills';
+  hudSkills.className = 'hud-skills';
+  hudSkills.innerHTML = `
+    <span class="skills-outline">Points: ${this.skillPoints}</span>
+    <span class="skills-base">Points: ${this.skillPoints}</span>
+    <span class="skills-grad">Points: ${this.skillPoints}</span>
+  `;
+  hudSkills.style.display = 'none'; // caché par défaut
+  document.body.appendChild(hudSkills);
+}
+
+// --- Afficher quand on ouvre la page des Skills ---
+hudSkills.style.display = '';
+
+// --- Fonction pour mettre à jour ---
+this.updateSkillsHUD = (points) => {
+  hudSkills.querySelector('.skills-outline').textContent = `Points: ${points}`;
+  hudSkills.querySelector('.skills-base').textContent = `Points: ${points}`;
+  hudSkills.querySelector('.skills-grad').textContent = `Points: ${points}`;
+};
 
 
 // --- Créer le container HUD Gold ---
@@ -661,6 +753,7 @@ while (this.playerXP >= this.xpForNextLevel(this.playerLevel)) {
     for (let i = 0; i < this.skillKeys.length; i++) {
         this.updateSkillUI(i);
         this.updatePointsHUD(this.skillPoints);
+        this.updateSkillsHUD(this.skillPoints);
     }
 }
 
@@ -814,24 +907,21 @@ this.skillUI_HUD = this.add.container(5, this.cameras.main.height - 190)
     .setScrollFactor(0)
     .setDepth(10)
     .setVisible(true);
-
+// HUD en jeu (normal)
 this.skillUIBars_HUD = [];
 this.createSkillBars(this.skillUI_HUD, this.skillUIBars_HUD);
 
 // HUD dans la page Skills (menu pause)
-this.skillUI_Menu = this.add.container(this.cameras.main.width/2 - 200, this.cameras.main.height/2 - 100)
-    .setScrollFactor(0)
-    .setDepth(2001)
-    .setVisible(false);
+this.skillUI_Menu = this.add.container(
+    this.cameras.main.width/2 - 200,
+    this.cameras.main.height/2 - 100
+)
+.setScrollFactor(0)
+.setDepth(2001)
+.setVisible(false);
 
 this.skillUIBars_Menu = [];
-this.createSkillBars(this.skillUI_Menu, this.skillUIBars_Menu);
-
-// Texte points pour le menu pause
-this.skillPointsUI_Menu = this.add.text(this.cameras.main.width/2, this.cameras.main.height/2 - 150,
-    `Points disponibles: ${this.skillPoints}`, { fontSize: "30px", fill: "#0f0" }
-).setOrigin(0.5).setScrollFactor(0).setDepth(2001).setVisible(false);
-
+this.createSkillBars(this.skillUI_Menu, this.skillUIBars_Menu, true); // <-- version "grossie"
 
 
 
@@ -887,6 +977,8 @@ this.keyI.on('down', () => {
     }
 });
 
+let degat_gun = 1;
+
 this.projectiles = this.physics.add.group({
     classType: Phaser.Physics.Arcade.Image,
     runChildUpdate: true
@@ -900,31 +992,11 @@ this.physics.add.overlap(this.projectiles, this.enemies, (projectile, enemy) => 
     projectile.destroy();
 
     // Applique les dégâts
-    if (enemy.health === undefined) enemy.health = 10; // valeur par défaut
-    enemy.health -= 1; // dégâts (tu peux mettre un autre nombre)
+    if (enemy.takeDamage) {
+    enemy.takeDamage(degat_gun, projectile); // 1 dégât, projectile comme killer
+}
 
-    // Affiche le texte "-1" comme pour le pet
-    const dmgText = this.add.text(enemy.x, enemy.y - 20, "-1", {
-        fontSize: "18px",
-        fill: "#ff0000",
-        fontFamily: "Arial",
-        stroke: "#000000",
-        strokeThickness: 3
-    }).setOrigin(0.5);
 
-    this.tweens.add({
-        targets: dmgText,
-        y: dmgText.y - 30,
-        alpha: 0,
-        duration: 600,
-        ease: "Power1",
-        onComplete: () => dmgText.destroy()
-    });
-
-    // Si l'ennemi meurt
-    if (enemy.health <= 0) {
-        enemy.destroy();
-    }
 }, null, this);
 
 
@@ -945,7 +1017,7 @@ this.physics.add.overlap(this.projectiles, this.enemies, (projectile, enemy) => 
 
         if (i === 0) iconKey = "poing"; // poing toujours dispo
         else if (i === 1 && this.skills.Armes >= 1) iconKey = "gun";
-        else if (i === 2 && this.skills.Mobilité >= 3) iconKey = "jetpack";
+        else if (i === 2 && this.skills.Mobilité >= 4) iconKey = "jetpack";
 
         // icône
         const icon = this.add.image(startX + i * spacing, startY, iconKey)
@@ -1037,15 +1109,22 @@ map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset
                     this.skillPoints--;
                     this.updateSkillUI(this.selectedSkillIndex);
                     this.updatePointsHUD(this.skillPoints);
+        this.updateSkillsHUD(this.skillPoints);
                     
                     this.refreshWeaponUI();
                 }
 
                 if (skill === "Armes") {
-                    this.weaponModes = ['melee'];
-                    if (this.skills.Armes >= 1) this.weaponModes.push('gun');
-                    this.refreshWeaponUI();
-                }
+    this.applyArmesStats();
+}
+if (skill === "Survie") {
+  this.applySurvieStats();
+}
+if (skill === "Mobilité") {
+  this.applyMobiliteStats();
+}
+
+
             } else if (selected && typeof selected.callback === "function") {
                 // Bouton retour2 → appelle le callback
                 selected.callback();
@@ -1085,7 +1164,7 @@ map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset
 
   // --- PLAYER ---
   if (this.clavier.left.isDown) {
-  this.player.setVelocityX(-120);
+  this.player.setVelocityX(-this.playerSpeed);
   if (this.player.hasWeapon) {
     this.player.anims.play("anim_tourne_gauche_arme", true);
   } else {
@@ -1094,7 +1173,7 @@ map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset
   this.left = true;
   this.right = false;
 } else if (this.clavier.right.isDown) {
-  this.player.setVelocityX(120);
+  this.player.setVelocityX(this.playerSpeed);
   if (this.player.hasWeapon) {
     this.player.anims.play("anim_tourne_droite_arme", true);
   } else {
@@ -1135,7 +1214,7 @@ if (!this.player.body.blocked.down) {
   }
 }
 if (this.clavier.up.isDown && this.player.body.blocked.down) {
-  this.player.setVelocityY(-160);
+  this.player.setVelocityY(-this.playerSpeed);
   if (this.right) {
     if (this.player.hasWeapon) {
       this.player.anims.play("anim_saut_droite_arme", true);
@@ -1157,9 +1236,8 @@ if (this.clavier.up.isDown && this.player.body.blocked.down) {
 if (Phaser.Input.Keyboard.JustDown(this.keyK) 
     && !this.isDashing 
     && this.skills["Mobilité"] >= 1 
-    && this.playerMana >= 5) {
-
-    this.playerMana -= 5;
+    && this.playerMana >= this.dashManaCost) {  // utiliser le coût dynamique
+    this.playerMana -= this.dashManaCost;
     this.updatePlayerManaBar();
 
     if (this.right) {
@@ -1168,6 +1246,7 @@ if (Phaser.Input.Keyboard.JustDown(this.keyK)
         this.startDash(-1, 0);
     }
 }
+
 
 
 if (this.attackMode === "gun" && this.skills.Armes >= 1) {
@@ -1185,7 +1264,7 @@ this.player.hasWeapon = false;
   if (this.skills["Survie"] >= 1 && this.pet) {
 
   const speed = 120;
-  const detectionRadius = 150;
+  const detectionRadius = this.detectionRadius;
 
   // trouve ennemi le plus proche
   let closestEnemy = null;
@@ -1263,9 +1342,10 @@ this.player.hasWeapon = false;
 this.projectiles.children.each((proj) => {
     if (proj.active) {
         const dist = Phaser.Math.Distance.Between(proj.spawnX, proj.spawnY, proj.x, proj.y);
-        if (dist > 370) {
-            proj.destroy();
-        }
+        if (dist > this.gunRange) {
+          proj.destroy();
+      }
+
     }
 });
 
@@ -1360,8 +1440,6 @@ updateSkillUI(index) {
         barFill.fillRoundedRect(barX, barY - barHeight / 2, ratio * barWidth, barHeight, 4);
     });
 
-    // Mets à jour le compteur de points (HUD + Menu)
-    if (this.skillPointsUI_Menu) this.skillPointsUI_Menu.setText(`Points disponibles: ${this.skillPoints}`);
 }
 
 
@@ -1394,11 +1472,11 @@ playerRespawn() {
 
 // Nouvelle méthode dans selection.js
 // Dans selection.js, remplacez takeDamage() par :
-perdreVie() {
+perdreVie(damage = 1) {
     // Éviter les dégâts multiples
     if (this.invulnerable) return;
     
-    this.playerHealth--;
+    this.playerHealth -= damage;
     this.updatePlayerHealthBar();
     
     
@@ -1741,9 +1819,9 @@ attackMelee() {
 }
 
 attackGun() {
-    if (!this.canAttack) return;
-
-    this.canAttack = false;
+    const now = this.time.now;
+    if (now - this.lastShotTime < this.gunFireRate) return; // cooldown
+    this.lastShotTime = now;
 
     // Décalage vertical : +10 ou +20 selon la taille du sprite
     let offsetY = 10;
@@ -1751,7 +1829,7 @@ attackGun() {
     // Décalage horizontal selon direction
     let offsetX = this.right ? 20 : this.left ? -20 : 0;
 
-    // Création du projectile un peu plus bas que le joueur
+    // Création du projectile
     let projectile = this.projectiles.create(
         this.player.x + offsetX,
         this.player.y + offsetY,
@@ -1761,27 +1839,26 @@ attackGun() {
     projectile.body.allowGravity = false;
 
     if (this.left) {
-  projectile.setVelocityX(-400); // shoot left
-  projectile.setFlipX(true);     // retourne l'image horizontalement
-} else {
-  projectile.setVelocityX(400);  // shoot right
-  projectile.setFlipX(false);    // orientation normale
-}
-
-
-    // Cooldown
-    this.time.delayedCall(500, () => { this.canAttack = true; });
-
-if (projectile) {
-    projectile.setActive(true).setVisible(true);
-    projectile.body.enable = true;
+        projectile.setVelocityX(-400);
+        projectile.setFlipX(true);
+    } else {
+        projectile.setVelocityX(400);
+        projectile.setFlipX(false);
+    }
 
     // On enregistre la position d'origine
     projectile.spawnX = this.player.x;
     projectile.spawnY = this.player.y;
+
+    // Pour la destruction selon distance
+    projectile.update = function() {
+        const dist = Phaser.Math.Distance.Between(this.spawnX, this.spawnY, this.x, this.y);
+        if (dist > this.scene.gunRange) {
+            this.destroy();
+        }
+    }
 }
 
-}
 
 refreshWeaponUI() {
     for (let i = 0; i < this.weaponModes.length; i++) {
@@ -1789,7 +1866,7 @@ refreshWeaponUI() {
 
         if (i === 0) iconKey = "poing"; // poing toujours dispo
         else if (i === 1 && this.skills.Armes >= 1) iconKey = "gun";
-        else if (i === 2 && this.skills.Mobilité >= 3) iconKey = "jetpack";
+        else if (i === 2 && this.skills.Mobilité >= 4) iconKey = "jetpack";
 
         this.weaponUI[i].icon.setTexture(iconKey);
 
@@ -1805,7 +1882,7 @@ refreshWeaponUI() {
 isWeaponUnlocked(index) {
     if (index === 0) return true; // poing toujours dispo
     if (index === 1) return this.skills.Armes >= 1;
-    if (index === 2) return this.skills.Mobilité >= 3;
+    if (index === 2) return this.skills.Mobilité >= 4;
     return false;
 }
 
@@ -1921,7 +1998,7 @@ this.retour2.setDepth(2001).setScrollFactor(0);
 this.skillSelectorButtons = [...this.skillKeys.map(k => k), this.retour2];
 
 // --- ICI --- Crée la flèche pour la sélection des skills
-this.skillSelector = this.add.image(85, -50, "fleche").setOrigin(0.5, 0.5).setScale(0.5);
+this.skillSelector = this.add.image(85, -50, "fleche").setOrigin(0.5, 0.5).setScale(1.8);
 this.pageSkills.add(this.skillSelector);
 
     // Active la navigation clavier
@@ -1991,7 +2068,9 @@ showPage(page, retourBtn) {
 
     if (page === this.pageSkills) {
         this.skillUI_Menu.setVisible(true).setScrollFactor(0);
-        this.skillPointsUI_Menu.setVisible(true).setScrollFactor(0);
+        
+    let hud0 = document.getElementById("hud-skills");
+    if (hud0) hud0.style.display = "block";
 
         // Active toutes les options du selector : skills + retour
         this.activeButtons = this.skillSelectorButtons;
@@ -2010,7 +2089,9 @@ hidePages() {
     if (this.pageSkills) {
         this.pageSkills.setVisible(false);
         this.skillUI_Menu.setVisible(false);
-        this.skillPointsUI_Menu.setVisible(false);
+        
+    let hud0 = document.getElementById("hud-skills");
+    if (hud0) hud0.style.display = "none";
     }
 
     this.menuButtons.forEach(btn => btn.setVisible(true));
@@ -2023,27 +2104,59 @@ hidePages() {
 
 
 
-
-
-
-createSkillBars(container, barArray) {
+createSkillBars(container, barArray, isMenu = false) {
     const skillFrames = ["skill_1", "skill_2", "skill_3"];
+    let menuOffsetY = isMenu ? -60 : 0;
     for (let i = 0; i < this.skillKeys.length; i++) {
-        let offsetY = i * 70;
-        let barX = 85;
+        let scaleFactor = isMenu ? 1.6 : 1;
+        let spacing = isMenu ? 132 : 70;
+        let barX = isMenu ? 98 : 85;
+        let offsetY = menuOffsetY + i * spacing;
         let barY = offsetY;
-        let barWidth = 121;
-        let barHeight = 20;
+        let barWidth = isMenu ? 250 : 121 * scaleFactor;
+        let barHeight = 20 * scaleFactor;
 
+        // Barre de remplissage en blocs (5 segments)
         let barFill = this.add.graphics();
-        let barTicks = this.add.graphics();
-        barTicks.lineStyle(1, 0xffffae, 0.5);
-        for (let j = 1; j < 5; j++) {
-            let tickX = barX + (j / 5) * barWidth;
-            barTicks.lineBetween(tickX, barY - barHeight / 2, tickX, barY + barHeight / 2);
+        barFill.fillStyle(0xfcad03, 1);
+
+        let nbLevels = 5;
+        let blockWidth = barWidth / nbLevels;
+        let skillVal = this.skills[this.skillKeys[i]] || 0;
+
+        for (let k = 0; k < nbLevels; k++) {
+            if (k < skillVal) {
+                barFill.fillRoundedRect(
+                    barX + k * blockWidth,
+                    barY - barHeight / 2,
+                    blockWidth - 2,  // petit espace entre segments
+                    barHeight,
+                    4 // arrondi identique à original
+                );
+            }
         }
 
-        let frame = this.add.image(0, offsetY, skillFrames[i]).setOrigin(0, 0.5).setScale(0.65);
+        // Ticks comme avant
+        let barTicks = this.add.graphics();
+        let tickLineWidth = isMenu ? 3 : 1;
+        let tickAlpha = isMenu ? 0.7 : 0.5;
+        barTicks.lineStyle(tickLineWidth, 0xffffae, tickAlpha);
+
+        for (let j = 1; j < 5; j++) {
+            let tickX = barX + (j / 5) * barWidth;
+            barTicks.lineBetween(
+                tickX,
+                barY - barHeight / 2,
+                tickX,
+                barY + barHeight / 2
+            );
+        }
+
+        // Cadre inchangé
+        let frameX = isMenu ? barX - 168 : 0;
+        let frame = this.add.image(frameX, offsetY, skillFrames[i])
+            .setOrigin(0, 0.5)
+            .setScale(isMenu ? 1.3 : 0.65);
 
         container.add([barFill, barTicks, frame]);
         barArray.push({ barFill, barX, barY, barWidth, barHeight });
@@ -2052,22 +2165,178 @@ createSkillBars(container, barArray) {
 
 
 
+
+
 // Met à jour la flèche sur la skill ou le bouton Retour
 updateSkillSelector() {
-    // Y de base pour le premier skill
-    const startY = -50;
-    const spacing = 70; // espace entre chaque skill
-    this.skillSelector.y = startY + this.selectedSkillIndex * spacing;
+    // Positions Y individuelles pour chaque skill
+    const skillYPositions = [
+        -170, // skill 0
+        -30,  // skill 1
+        100   // skill 2
+    ];
 
-    // Si tu veux, tu peux aussi bouger X si Retour est à une position différente
-    if (this.selectedSkillIndex === this.skillSelectorButtons.length - 1) {
-        // dernière option = Retour
-        this.skillSelector.x = 150; // exemple : déplacer la flèche un peu à droite
+    // Position X fixe pour les skills
+    const skillX = 320;
+
+    // Vérifie si on est sur un skill ou sur le bouton Retour
+    if (this.selectedSkillIndex < skillYPositions.length) {
+        // Sur un skill → affiche la flèche
+        this.skillSelector.setVisible(true);
+        this.skillSelector.y = skillYPositions[this.selectedSkillIndex];
+        this.skillSelector.x = skillX;
+
+        // Retour à l’échelle normale pour le bouton Retour
+        this.retour2.setScale(0.3);
     } else {
-        this.skillSelector.x = 85; // X normal pour les skills
+        // Sur le bouton Retour → flèche invisible
+        this.skillSelector.setVisible(false);
+
+        // Agrandir le bouton Retour
+        this.retour2.setScale(0.4);
     }
 }
+
+
+
+
   
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//STATS SKILLS
+applyArmesStats() {
+    // Reset to base values first
+    this.weaponModes = ['melee'];
+    this.degatPlayerCorpsAcorps = 2;
+    this.degat_gun = 1;
+    this.gunRange = 370;
+    this.gunFireRate = 500;
+
+    const lvl = this.skills.Armes;
+
+    if (lvl >= 1) this.weaponModes.push('gun');             // lvl 1
+    if (lvl >= 2) this.degatPlayerCorpsAcorps = 5;        // lvl 2
+    if (lvl >= 3) this.degat_gun = 2;                     // lvl 3
+    if (lvl >= 4) this.gunRange = 600;                    // lvl 4
+    if (lvl >= 5) this.gunFireRate = 200;                 // lvl 5
+
+    this.refreshWeaponUI();
+}
+
+
+
+// --- STATS SKILLS : Survie ---
+applySurvieStats() {
+    // --- RESET VALEURS DE BASE ---
+    this.playerMaxHealth = 50;  // base
+    this.playerHealth = 50;
+    this.detectionRadius = 150;         // valeur de base pour le pet
+    this.petDamage = 1;          // dégâts de base du pet
+
+    const lvl = this.skills["Survie"];
+
+    // --- NIVEAUX ---
+    if (lvl >= 1 && !this.pet) {
+        this.spawnPet(); // lvl 1 → spawn pet
+    }
+
+    if (lvl >= 2) {
+        this.playerMaxHealth = 100; // lvl 2 → +HP
+        this.playerHealth = this.playerMaxHealth;
+        this.updatePlayerHealthBar();
+    }
+
+    if (lvl >= 3) {
+        this.detectionRadius = 400; // lvl 3 → plus de range pour le pet
+    }
+
+    if (lvl >= 4) {
+        this.playerMaxHealth = 200; // lvl 4 → HP max plus haut
+        this.playerHealth = this.playerMaxHealth;
+        this.updatePlayerHealthBar();
+    }
+
+    if (lvl >= 5) {
+        this.petDamage = 5; // lvl 5 → dégâts du pet
+    }
+
+}
+
+// --- STATS SKILLS : Mobilité ---
+applyMobiliteStats() {
+    // --- VALEURS DE BASE ---
+    this.playerSpeed = 120;         // vitesse horizontale de base
+    this.playerJump = 160;          // saut de base
+    this.hasDash = false;           // dash désactivé
+    this.hasJetpack = false;        // jetpack désactivé
+    this.dashManaCost = 5;          // coût du dash
+    this.jetpackManaCost = 5;       // coût du jetpack
+
+    const lvl = this.skills["Mobilité"];
+
+    // --- NIVEAUX ---
+    if (lvl >= 1) {
+        this.hasDash = true;       // lvl 1 → débloque le dash
+    }
+
+    if (lvl >= 2) {
+        this.playerSpeed = 180;    // lvl 2 → + vitesse
+    }
+
+    if (lvl >= 3) {
+        this.playerJump = 220;     // lvl 3 → + saut
+    }
+
+    if (lvl >= 4) {
+        this.hasJetpack = true;    // lvl 4 → débloque le jetpack
+    }
+
+    if (lvl >= 5) {
+        this.dashManaCost = 1;     // lvl 5 → dash & jetpack coûtent moins
+        this.jetpackManaCost = 3;
+    }
+}
 
 }

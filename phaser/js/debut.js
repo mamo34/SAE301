@@ -14,8 +14,8 @@ export default class debut extends Phaser.Scene {
     this.load.image("boutonRetour", "./assets/boutonretour.png");
 
     // Pages
-    this.load.image("pageControles", "./assets/commandes.png");
-    this.load.image("pageCredits", "./assets/credits.png");
+    this.load.image("pageControles", "./assets/commandes.jpg");
+    this.load.image("pageCredits", "./assets/credits.jpg");
   }
 
   create() {

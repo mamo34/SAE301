@@ -2,7 +2,7 @@ import Enemy from "./Enemy.js";
 
 export default class EnemyParabolic extends Enemy {
   constructor(scene, x, y, target) {
-    super(scene, x, y, "img_enemy1", 1, target, 2, 1, 1);
+    super(scene, x, y, "img_enemy1", 3, target, 2, 1, 1);
 
     // flags / stockage état
     this.isPreparing = false;

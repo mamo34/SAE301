@@ -38,7 +38,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
           if (this.scene && this.scene.invulnerable) return;
 
-          if (this.scene && this.scene.perdreVie) this.scene.perdreVie();
+          if (this.scene && this.scene.perdreVie) this.scene.perdreVie(this.damage);
         },
         undefined,
         this
@@ -109,11 +109,32 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   // --- Gestion des dégâts et récompenses ---
   takeDamage(amount = 1, killer = null) {
     if (this.scene.invulnerable) return;
+    
     this.health -= amount;
+
+    // texte "-amount"
+    const dmgText = this.scene.add.text(this.x, this.y - 20, `-${amount}`, {
+        fontSize: "18px",
+        fill: "#ff0000",
+        fontFamily: "Arial",
+        stroke: "#000000",
+        strokeThickness: 3
+    }).setOrigin(0.5);
+
+    this.scene.tweens.add({
+        targets: dmgText,
+        y: dmgText.y - 30,
+        alpha: 0,
+        duration: 600,
+        ease: "Power1",
+        onComplete: () => dmgText.destroy()
+    });
+
     if (this.health <= 0) {
-      this.onDeath(killer);
+        this.onDeath(killer);
     }
-  }
+}
+
 
   onDeath(killer = null) {
     if (!this.active) return;
