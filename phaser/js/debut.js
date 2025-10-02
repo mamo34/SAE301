@@ -18,9 +18,22 @@ export default class debut extends Phaser.Scene {
     // Pages
     this.load.image("pageControles", "./assets/commandes.jpg");
     this.load.image("pageCredits", "./assets/credits.jpg");
+
+    //Musik
+    this.load.audio("music", "./assets/musique_sfx/musique_1.mp3");
+    this.load.audio("whoosh", "./assets/musique_sfx/whoosh1.mp3");
+    this.load.audio("select", "./assets/musique_sfx/select.mp3");
+    this.load.audio("click", "./assets/musique_sfx/click.mp3");
   }
 
   create() {
+this.whoosh = this.sound.add('whoosh', { volume: 0.5, loop: false });
+this.click = this.sound.add('click', { volume: 0.5, loop: false });
+this.select = this.sound.add('select', { volume: 0.5, loop: false });
+if (!this.sound.get("music")) { 
+        this.music = this.sound.add("music", { volume: 0.7, loop: true });
+        this.music.play();
+    }
     this.currentMode = "menu";
     const centerX = this.cameras.main.width / 2;
     const centerY = this.cameras.main.height / 2;
@@ -37,16 +50,21 @@ export default class debut extends Phaser.Scene {
 
     this.boutonJouer = this.createButton(centerX + offsetX, offsetY, "boutonJouer", () => {
       
+        this.click.play();
     }, buttonScale);
     this.menuButtons.push(this.boutonJouer);
 
     this.boutonControles = this.createButton(centerX + offsetX, offsetY + 125, "boutonControles", () => {
       this.showPage(this.pageControles, this.retour1);
+      
+        this.click.play();
     }, buttonScale);
     this.menuButtons.push(this.boutonControles);
 
     this.boutonCredits = this.createButton(centerX + offsetX, offsetY + 250, "boutonCredits", () => {
       this.showPage(this.pageCredits, this.retour2);
+      
+        this.click.play();
     }, buttonScale);
     this.menuButtons.push(this.boutonCredits);
 
@@ -109,12 +127,16 @@ export default class debut extends Phaser.Scene {
         if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
             this.selectedIndex = (this.selectedIndex + 1) % this.activeButtons.length;
             this.updateButtonSelection();
+            this.select.play();
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
             this.selectedIndex = (this.selectedIndex - 1 + this.activeButtons.length) % this.activeButtons.length;
             this.updateButtonSelection();
+            this.select.play();
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.keyI)) {
+          
+        this.click.play();
             const btn = this.activeButtons[this.selectedIndex];
             if (btn.callback) btn.callback();
         }
@@ -125,12 +147,16 @@ export default class debut extends Phaser.Scene {
         if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
             this.askSelectedIndex = (this.askSelectedIndex - 1 + this.askButtons.length) % this.askButtons.length;
             this.updateAskSelection();
+            this.select.play();
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
             this.askSelectedIndex = (this.askSelectedIndex + 1) % this.askButtons.length;
             this.updateAskSelection();
+            this.select.play();
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.keyI)) {
+          
+        this.click.play();
             const btn = this.askButtons[this.askSelectedIndex];
             if (btn.callback) btn.callback();
         }
@@ -142,7 +168,7 @@ export default class debut extends Phaser.Scene {
     const btn = this.add.image(x, y, key).setInteractive({ useHandCursor: true }).setScale(scale);
     btn.callback = callback;
 
-    btn.on("pointerover", () => this.setSelectedButton(btn));
+    btn.on("pointerover", () => this.setSelectedButton(btn));this.select.play();
     btn.on("pointerout", () => this.updateButtonSelection());
     btn.on("pointerdown", () => {
       this.setSelectedButton(btn);
@@ -188,6 +214,7 @@ export default class debut extends Phaser.Scene {
     this.pageControles.setVisible(false);
     this.pageCredits.setVisible(false);
     this.menu.setVisible(true);
+        this.click.play();
 
     // Retour au menu principal
     this.activeButtons = this.menuButtons;
@@ -198,6 +225,7 @@ export default class debut extends Phaser.Scene {
 
   showTutorialPrompt() {
     // Slide des boutons du menu principal vers la droite
+    this.whoosh.play();
     this.menuButtons.forEach(btn => {
         this.tweens.add({
             targets: btn,
@@ -233,6 +261,7 @@ updateAskSelection() {
 
 startSelection() {
     this.scene.start("selection");
+this.music.stop();
 }
 
 startTutorial() {

@@ -139,6 +139,29 @@ this.load.image("boutonControles", "./assets/boutoncontroles.png");
     });
 
 
+
+
+
+
+    //SONS
+    this.load.audio("musiqueMap1", "./assets/musique_sfx/musiquemap1.mp3");
+    this.load.audio("musiqueMap2", "./assets/musique_sfx/musiquemap2.mp3");
+
+    this.load.audio("pickup", "./assets/musique_sfx/pickup.mp3");
+    this.load.audio("reload", "./assets/musique_sfx/reload.mp3");
+    this.load.audio("shot", "./assets/musique_sfx/shot.mp3");
+    this.load.audio("grass", "./assets/musique_sfx/grass.mp3");
+    this.load.audio("walk", "./assets/musique_sfx/walk.mp3");
+    this.load.audio("whoosh", "./assets/musique_sfx/whoosh.mp3");
+    this.load.audio("hit", "./assets/musique_sfx/hit.mp3");
+    this.load.audio("skill", "./assets/musique_sfx/skill.mp3");
+    this.load.audio("owl", "./assets/musique_sfx/owl.mp3");
+    this.load.audio("ouch", "./assets/musique_sfx/ouch.mp3");
+    this.load.audio("mdr", "./assets/musique_sfx/mdr.mp3");
+
+    this.load.audio("select", "./assets/musique_sfx/select.mp3");
+    this.load.audio("click", "./assets/musique_sfx/click.mp3");
+    
   }
 
   create() {
@@ -152,7 +175,19 @@ WebFont.load({
     const centerX = this.cameras.main.width / 2;
   const centerY = this.cameras.main.height / 2;
 
-  
+  //SONS
+  this.sfxGrass = this.sound.add("grass", { volume: 0.5, loop: true });
+this.sfxWalk = this.sound.add("walk", { volume: 0.5, loop: true });
+this.whoosh = this.sound.add('whoosh', { volume: 0.5, loop: false });
+this.pickup = this.sound.add('pickup', { volume: 0.5, loop: false });
+this.shot = this.sound.add('shot', { volume: 0.5, loop: false });
+this.hit = this.sound.add('hit', { volume: 0.5, loop: false });
+this.click = this.sound.add('click', { volume: 0.5, loop: false });
+this.select = this.sound.add('select', { volume: 0.5, loop: false });
+this.skill = this.sound.add('skill', { volume: 0.5, loop: false });
+this.owl = this.sound.add("owl", { volume: 0.5, loop: false });
+this.mdr = this.sound.add("mdr", { volume: 5, loop: false });
+
     
     // ÉTAT DE SCÈNE
     this.gameOver = false;
@@ -775,6 +810,7 @@ while (this.playerXP >= this.xpForNextLevel(this.playerLevel)) {
 
 
     this.events.on("goldPickup", amount => {
+    this.pickup.play();
     this.playerGold += amount;
     console.log(`Gold +${amount} → total: ${this.playerGold}`);
     this.updateGoldHUD(this.playerGold)
@@ -936,8 +972,8 @@ this.teleportB = this.add.rectangle(150, 1920, 100, 100);
 this.physics.add.existing(this.teleportB, true);
 
 // Pour debug → affiche en rouge (tu peux commenter après)
-//this.teleportA.setFillStyle?.(0xff0000, 0.3);
-//this.teleportB.setFillStyle?.(0x0000ff, 0.3);
+this.teleportA.setFillStyle?.(0xff0000, 0.3);
+this.teleportB.setFillStyle?.(0x0000ff, 0.3);
 
 // Flag pour savoir si le joueur est dedans
 this.currentTeleportZone = null;
@@ -962,6 +998,12 @@ this.events.on("update", () => {
     }
 });
 
+// MUSIQUE : préparation des musiques
+this.musiqueMap1 = this.sound.add('musiqueMap1', { volume: 0.6, loop: true });
+this.musiqueMap2 = this.sound.add('musiqueMap2', { volume: 0.7, loop: true });
+this.zoneActuelle = "A";
+this.musiqueMap1.play(); // joue la musique Map1 au lancement
+
 
 // Reset si on sort des zones
 this.physics.add.overlap(this.player, [this.teleportA, this.teleportB], null, null, this);
@@ -969,12 +1011,19 @@ this.physics.add.overlap(this.player, [this.teleportA, this.teleportB], null, nu
 
 this.keyI = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I);
 
+// Gestion de la téléportation + changement de musique
 this.keyI.on('down', () => {
-    if (this.currentTeleportZone === "A") {
-        this.fadeOutAndTeleport(500, this.teleportB.x, this.teleportB.y);
-    } else if (this.currentTeleportZone === "B") {
-        this.fadeOutAndTeleport(500, this.teleportA.x, this.teleportA.y);
-    }
+  if (this.currentTeleportZone === "A") {
+    this.fadeOutAndTeleport(500, this.teleportB.x, this.teleportB.y);
+    if (this.musiqueMap1.isPlaying) { this.musiqueMap1.stop(); }
+    this.musiqueMap2.play();
+    this.zoneActuelle = "B";
+  } else if (this.currentTeleportZone === "B") {
+    this.fadeOutAndTeleport(500, this.teleportA.x, this.teleportA.y);
+    if (this.musiqueMap2.isPlaying) { this.musiqueMap2.stop(); }
+    this.musiqueMap1.play();
+    this.zoneActuelle = "A";
+  }
 });
 
 let degat_gun = 1;
@@ -990,6 +1039,7 @@ this.physics.add.collider(this.projectiles, this.platformLayer, (proj) => {
 // Collision projectiles ↔ ennemis
 this.physics.add.overlap(this.projectiles, this.enemies, (projectile, enemy) => {
     projectile.destroy();
+    this.hit.play();
 
     // Applique les dégâts
     if (enemy.takeDamage) {
@@ -1093,9 +1143,11 @@ map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset
         if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
             this.selectedSkillIndex = Math.min(this.selectedSkillIndex + 1, this.skillSelectorButtons.length - 1);
             this.updateSkillSelector();
+            this.select.play();
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
             this.selectedSkillIndex = Math.max(this.selectedSkillIndex - 1, 0);
             this.updateSkillSelector();
+            this.select.play();
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.keyI)) {
@@ -1110,6 +1162,7 @@ map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset
                     this.updateSkillUI(this.selectedSkillIndex);
                     this.updatePointsHUD(this.skillPoints);
         this.updateSkillsHUD(this.skillPoints);
+        this.skill.play();
                     
                     this.refreshWeaponUI();
                 }
@@ -1144,9 +1197,11 @@ if (skill === "Mobilité") {
         if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
             this.selectedIndex = (this.selectedIndex + 1) % this.activeButtons.length;
             this.updateButtonSelection();
+this.select.play();
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
             this.selectedIndex = (this.selectedIndex - 1 + this.activeButtons.length) % this.activeButtons.length;
             this.updateButtonSelection();
+            this.select.play();
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.keyI)) {
@@ -1231,6 +1286,28 @@ if (this.clavier.up.isDown && this.player.body.blocked.down) {
   }
 }
 
+const isMoving = (this.clavier.left.isDown || this.clavier.right.isDown);
+const onGround = this.player.body.blocked.down;
+
+if (isMoving && onGround) {
+    if (this.zoneActuelle === "A") {
+        if (!this.sfxGrass.isPlaying) {
+            this.sfxWalk.stop();
+            this.sfxGrass.play();
+        }
+    } else if (this.zoneActuelle === "B") {
+        if (!this.sfxWalk.isPlaying) {
+            this.sfxGrass.stop();
+            this.sfxWalk.play();
+        }
+    }
+} else {
+    // stop quand le joueur arrête de bouger
+    this.sfxGrass.stop();
+    this.sfxWalk.stop();
+}
+
+
 
 // DASH
 if (Phaser.Input.Keyboard.JustDown(this.keyK) 
@@ -1239,6 +1316,7 @@ if (Phaser.Input.Keyboard.JustDown(this.keyK)
     && this.playerMana >= this.dashManaCost) {  // utiliser le coût dynamique
     this.playerMana -= this.dashManaCost;
     this.updatePlayerManaBar();
+    this.whoosh.play();
 
     if (this.right) {
         this.startDash(1, 0);
@@ -1256,13 +1334,15 @@ this.player.hasWeapon = false;
 }
 
   // --- PET ---
+  if(this.skills["Survie"]>=1){
+    this.scheduleOwlSound();
+  }
 
   if (this.skills["Survie"] >= 1 && !this.pet) {
   this.spawnPet();
 }
 
   if (this.skills["Survie"] >= 1 && this.pet) {
-
   const speed = 120;
   const detectionRadius = this.detectionRadius;
 
@@ -1334,6 +1414,7 @@ this.player.hasWeapon = false;
       enemy.petDamageEvent.remove(false);
       enemy.petDamageEvent = null;
       enemy.isPetOverlapping = false;
+      
     }
   });
 }
@@ -1404,21 +1485,15 @@ updatePlayerXPBar() {
 
 
   playerDeath() {
-    
+    this.sound.stopAll();
+    this.mdr.play();
     // NE PAS détruire le player, juste pauser
+        this.gameOver = true;
     this.physics.pause();
     
     
-    // Afficher un message de game over
-    this.add.text(400, 300, 'GAME OVER', { 
-        fontSize: '32px', 
-        fill: '#ff0000',
-        fontFamily: 'Arial'
-    }).setOrigin(0.5);
-    
-    
-    // Redémarrer la scène après 2 secondes
-    this.time.delayedCall(2000, () => {
+    // Redémarrer la scène après 3 secondes
+    this.time.delayedCall(3000, () => {
         this.scene.restart();
     });
     
@@ -1447,34 +1522,13 @@ updateSkillUI(index) {
 
 
 
-playerRespawn() {
-    // Réinitialiser la vie
-    this.playerHealth = this.playerMaxHealth;
-    this.updatePlayerHealthBar();
-    
-    // Repositionner le joueur à sa position initiale
-    this.player.setPosition(100, 450);
-    this.player.setVelocity(0, 0);
-    this.player.setAlpha(1);
-    
-    // Redémarrer la physique si elle était en pause
-    this.physics.resume();
-    
-    // Réinitialiser le flag gameOver
-    this.gameOver = false;
-    
-    // Optionnel : donner une invincibilité temporaire
-    this.player.setTint(0x888888); // Gris pour montrer l'invincibilité
-    this.time.delayedCall(2000, () => {
-        this.player.clearTint(); // Remettre la couleur normale
-    });
-}
 
 // Nouvelle méthode dans selection.js
 // Dans selection.js, remplacez takeDamage() par :
 perdreVie(damage = 1) {
     // Éviter les dégâts multiples
     if (this.invulnerable) return;
+    this.playOuch();
     
     this.playerHealth -= damage;
     this.updatePlayerHealthBar();
@@ -1514,7 +1568,7 @@ perdreVie(damage = 1) {
     } else {
         // Game over (une seule fois)
         if (this.gameOver) return;
-        this.gameOver = true;
+        this.playerDeath();
         // Stopper toute action de jeu
         if (this.petShootEvent) this.petShootEvent.remove(false);
         this.physics.pause();
@@ -1770,6 +1824,8 @@ shootProjectile() {
         if (enemy && enemy.takeDamage) {
             enemy.takeDamage(1, this.player); // 1 dégât
             proj.destroy();
+            
+            this.hit.play();
         }
     });
 }
@@ -1797,6 +1853,8 @@ attackMelee() {
         if (!hitRegistered && enemy && enemy.active && enemy.takeDamage) {
             hitRegistered = true;
             enemy.takeDamage(this.degatPlayerCorpsAcorps, this.player);
+            
+    this.hit.play();
 
             let slashText = this.add.text(enemy.x, enemy.y - 40, "Slash!", {
                 fontSize: "14px",
@@ -1822,6 +1880,7 @@ attackGun() {
     const now = this.time.now;
     if (now - this.lastShotTime < this.gunFireRate) return; // cooldown
     this.lastShotTime = now;
+    this.shot.play();
 
     // Décalage vertical : +10 ou +20 selon la taille du sprite
     let offsetY = 10;
@@ -1948,6 +2007,7 @@ this.menuButtons.push(this.boutonSkills);
         this.physics.world.resume();
         this.time.paused = false;
         this.hidePauseMenu();
+        this.click.play();
         this.isDansMenu = false;
     }, 0.3).setScrollFactor(0);
     this.menuButtons.push(this.boutonRetourJeu);
@@ -2032,7 +2092,7 @@ createButton(x, y, key, callback, scale = 1) {
     const btn = this.add.image(x, y, key).setInteractive({ useHandCursor: true }).setScale(scale);
     btn.callback = callback;
 
-    btn.on("pointerover", () => this.setSelectedButton(btn));
+    btn.on("pointerover", () => this.setSelectedButton(btn));this.select.play();
     btn.on("pointerout", () => this.updateButtonSelection());
     btn.on("pointerdown", () => callback());
 
@@ -2050,6 +2110,7 @@ setSelectedButton(btn) {
 updateButtonSelection() {
     this.activeButtons.forEach((btn, i) => {
         if (btn && typeof btn.setScale === "function") {
+          this.select.play();
             if (btn === this.retour1 || btn === this.retour2) {
                 btn.setScale(0.3); // boutons retour toujours à taille fixe
             } else {
@@ -2065,6 +2126,7 @@ updateButtonSelection() {
 showPage(page, retourBtn) {
     this.menuButtons.forEach(btn => btn.setVisible(false));
     page.setVisible(true);
+    this.click.play();
 
     if (page === this.pageSkills) {
         this.skillUI_Menu.setVisible(true).setScrollFactor(0);
@@ -2098,6 +2160,7 @@ hidePages() {
     this.activeButtons = this.menuButtons;
     this.selectedIndex = 0;
     this.updateButtonSelection();
+    this.click.play();
 }
 
 
@@ -2197,6 +2260,18 @@ updateSkillSelector() {
     }
 }
 
+scheduleOwlSound() {
+    // Temps aléatoire entre 20s et 60s
+    const delay = Phaser.Math.Between(20000, 60000);
+
+    this.time.delayedCall(delay, () => {
+        if (this.pet && this.pet.active) {
+            this.sfxOwl.play();
+        }
+        // Reprogramme le suivant tant que la scène existe
+        this.scheduleOwlSound();
+    });
+}
 
 
 
@@ -2227,6 +2302,23 @@ updateSkillSelector() {
 
 
 
+playOuch() {
+    const sfx = this.sound.add("ouch", { volume: 0.5 });
+
+    // Pick a random rate (speed/pitch). 1 is normal, >1 faster/higher pitch, <1 slower/lower pitch
+    const randomPitch = Phaser.Math.FloatBetween(0.85, 1.15);
+
+    // Pick a random volume too if you want variation
+    const randomVolume = Phaser.Math.FloatBetween(0.2, 0.8);
+
+    sfx.setRate(randomPitch);
+    sfx.setVolume(randomVolume);
+
+    sfx.play();
+
+    // Clean up after it finishes
+    sfx.once("complete", () => sfx.destroy());
+}
 
 
 
