@@ -27,11 +27,11 @@ export default class debut extends Phaser.Scene {
   }
 
   create() {
-this.whoosh = this.sound.add('whoosh', { volume: 0.5, loop: false });
-this.click = this.sound.add('click', { volume: 0.5, loop: false });
-this.select = this.sound.add('select', { volume: 0.5, loop: false });
+this.whoosh = this.sound.add('whoosh', { volume: 0.4, loop: false });
+this.click = this.sound.add('click', { volume: 0.4, loop: false });
+this.select = this.sound.add('select', { volume: 0.4, loop: false });
 if (!this.sound.get("music")) { 
-        this.music = this.sound.add("music", { volume: 0.7, loop: true });
+        this.music = this.sound.add("music", { volume: 0.3, loop: true });
         this.music.play();
     }
     this.currentMode = "menu";

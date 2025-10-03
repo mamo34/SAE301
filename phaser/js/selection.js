@@ -90,6 +90,7 @@ this.playerSpeed = 120;         // vitesse horizontale de base
     this.load.image("img_gold", "./assets/engrenage.png");
     this.load.image("fleche", "./assets/fleche.png");
     this.load.image("title", "./assets/title.png");
+    this.load.image("boutonRetour", "./assets/boutonretour.png");
 
 
     this.load.image("cadre_mana", "./assets/barre_mana.png");
@@ -185,8 +186,8 @@ this.hit = this.sound.add('hit', { volume: 0.5, loop: false });
 this.click = this.sound.add('click', { volume: 0.5, loop: false });
 this.select = this.sound.add('select', { volume: 0.5, loop: false });
 this.skill = this.sound.add('skill', { volume: 0.5, loop: false });
-this.sfxOwl = this.sound.add("sfxOwl", { volume: 0.8, loop: false });
-this.mdr = this.sound.add("mdr", { volume: 5, loop: false });
+this.sfxOwl = this.sound.add("sfxOwl", { volume: 0.6, loop: false });
+this.mdr = this.sound.add("mdr", { volume: 10, loop: false });
 
     
     // ÉTAT DE SCÈNE
@@ -999,8 +1000,8 @@ this.events.on("update", () => {
 });
 
 // MUSIQUE : préparation des musiques
-this.musiqueMap1 = this.sound.add('musiqueMap1', { volume: 0.6, loop: true });
-this.musiqueMap2 = this.sound.add('musiqueMap2', { volume: 0.7, loop: true });
+this.musiqueMap1 = this.sound.add('musiqueMap1', { volume: 0.4, loop: true });
+this.musiqueMap2 = this.sound.add('musiqueMap2', { volume: 0.4, loop: true });
 this.zoneActuelle = "A";
 this.musiqueMap1.play(); // joue la musique Map1 au lancement
 
@@ -2300,13 +2301,13 @@ scheduleOwlSound() {
 
 
 playOuch() {
-    const sfx = this.sound.add("ouch", { volume: 0.5 });
+    const sfx = this.sound.add("ouch", { volume: 0.4 });
 
     // Pick a random rate (speed/pitch). 1 is normal, >1 faster/higher pitch, <1 slower/lower pitch
     const randomPitch = Phaser.Math.FloatBetween(0.85, 1.15);
 
     // Pick a random volume too if you want variation
-    const randomVolume = Phaser.Math.FloatBetween(0.2, 0.8);
+    const randomVolume = Phaser.Math.FloatBetween(0.2, 0.6);
 
     sfx.setRate(randomPitch);
     sfx.setVolume(randomVolume);
