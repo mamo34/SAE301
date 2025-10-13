@@ -212,13 +212,15 @@ this.mdr = this.sound.add("mdr", { volume: 0.1, loop: false });
   const tileset9 = map.addTilesetImage("Background map 2 extend", "tiles9");
   const tileset10 = map.addTilesetImage("sol_meca", "tiles10");
   const tileset11 = map.addTilesetImage("82c71d7a-b3ba-4494-b2d4-4e3449d95bdd", "tiles11");
+  const tileset12 = map.addTilesetImage("tileset_meca", "tiles12");
+  
     
     // Créer les calques
-    map.createLayer("background_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
-    map.createLayer("background_2_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
+    map.createLayer("background_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12], 0, 0);
+    map.createLayer("background_2_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12], 0, 0);
     this.platformLayer = map.createLayer(
   "platform_layer",
-  [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11],
+  [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12],
   0,
   0
 );
@@ -1627,7 +1629,20 @@ perdreVie(damage = 1) {
         }).setOrigin(0.5);
         // Redémarrer après 1.5s
         this.time.delayedCall(1500, () => {
-        this.scene.start("selection");
+  // Reset complet des variables avant de relancer la scène
+  this.playerHealth = 50;
+  this.playerMaxHealth = 50;
+  this.playerLevel = 0;
+  this.playerXP = 0;
+  this.playerGold = 0;
+  this.hasDash = false;
+  this.hasJetpack = false;
+  this.skillPoints = 0;
+  this.skills = { Armes: 0, Survie: 0, Mobilité: 0 };
+  this.weaponModes = ['melee'];
+  this.selectedWeaponIndex = 0;
+  // Ajoute d'autres resets si besoin (mana, etc.)
+  this.scene.restart();
         });
         
         
