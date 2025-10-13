@@ -38,7 +38,7 @@ this.playerSpeed = 120;         // vitesse horizontale de base
     this.weaponModes = ['melee'];
     if (this.skills.Armes >= 1) this.weaponModes.push('gun');
     // Pour une troisième arme plus tard :
-    // if (this.skills.Mobilité >= 4) this.weaponModes.push('jetpack');
+     if (this.skills.Mobilité >= 4) this.weaponModes.push('jetpack');
     this.selectedWeaponIndex = 0;
 
 
@@ -159,6 +159,7 @@ this.load.image("boutonControles", "./assets/boutoncontroles.png");
     this.load.audio("sfxOwl", "./assets/musique_sfx/owl.mp3");
     this.load.audio("ouch", "./assets/musique_sfx/ouch.mp3");
     this.load.audio("mdr", "./assets/musique_sfx/mdr.mp3");
+    this.load.audio("jetpack", "./assets/musique_sfx/jetpack.mp3");
 
     this.load.audio("select", "./assets/musique_sfx/select.mp3");
     this.load.audio("click", "./assets/musique_sfx/click.mp3");
@@ -177,17 +178,18 @@ WebFont.load({
   const centerY = this.cameras.main.height / 2;
 
   //SONS
-  this.sfxGrass = this.sound.add("grass", { volume: 0.5, loop: true });
-this.sfxWalk = this.sound.add("walk", { volume: 0.5, loop: true });
-this.whoosh = this.sound.add('whoosh', { volume: 0.5, loop: false });
-this.pickup = this.sound.add('pickup', { volume: 0.5, loop: false });
-this.shot = this.sound.add('shot', { volume: 0.5, loop: false });
-this.hit = this.sound.add('hit', { volume: 0.5, loop: false });
-this.click = this.sound.add('click', { volume: 0.5, loop: false });
-this.select = this.sound.add('select', { volume: 0.5, loop: false });
+  this.sfxGrass = this.sound.add("grass", { volume: 0.3, loop: true });
+this.sfxWalk = this.sound.add("walk", { volume: 0.3, loop: true });
+this.whoosh = this.sound.add('whoosh', { volume: 0.4, loop: false });
+this.pickup = this.sound.add('pickup', { volume: 0.2, loop: false });
+this.shot = this.sound.add('shot', { volume: 0.3, loop: false });
+this.hit = this.sound.add('hit', { volume: 0.2, loop: false });
+this.click = this.sound.add('click', { volume: 0.4, loop: false });
+this.select = this.sound.add('select', { volume: 0.3, loop: false });
 this.skill = this.sound.add('skill', { volume: 0.5, loop: false });
-this.sfxOwl = this.sound.add("sfxOwl", { volume: 0.6, loop: false });
-this.mdr = this.sound.add("mdr", { volume: 10, loop: false });
+this.sfxOwl = this.sound.add("sfxOwl", { volume: 0.8, loop: false });
+this.jetpack = this.sound.add("jetpack", { volume: 0.4, loop: false });
+this.mdr = this.sound.add("mdr", { volume: 0.1, loop: false });
 
     
     // ÉTAT DE SCÈNE
@@ -1001,7 +1003,7 @@ this.events.on("update", () => {
 
 // MUSIQUE : préparation des musiques
 this.musiqueMap1 = this.sound.add('musiqueMap1', { volume: 0.4, loop: true });
-this.musiqueMap2 = this.sound.add('musiqueMap2', { volume: 0.4, loop: true });
+this.musiqueMap2 = this.sound.add('musiqueMap2', { volume: 0.2, loop: true });
 this.zoneActuelle = "A";
 this.musiqueMap1.play(); // joue la musique Map1 au lancement
 
@@ -1052,58 +1054,56 @@ this.physics.add.overlap(this.projectiles, this.enemies, (projectile, enemy) => 
 
 
 // modes d'attaque
-    this.weaponModes = ["melee", "gun", "jetpack"];
-    this.selectedWeaponIndex = 0;
-    this.attackMode = this.weaponModes[this.selectedWeaponIndex];
+    // 🧭 Fonction pour mettre à jour la liste des armes débloquées
+// 🪙 Modes d'attaque (fixe à 3)
+// Initialisation des modes d'attaque
+this.weaponModes = ['melee'];
+if (this.skills.Armes >= 1) this.weaponModes.push('gun');
+if (this.skills.Mobilité >= 4) this.weaponModes.push('jetpack');
+this.selectedWeaponIndex = 0;
+this.attackMode = this.weaponModes[this.selectedWeaponIndex];
 
-    // groupe UI des armes
-    this.weaponUI = [];
+// Groupe UI des armes
+this.weaponUI = [];
+const startX = 1045;
+const startY = 665;
+const spacing = 90;
+for (let i = 0; i < 3; i++) {
+  let iconKey = "vide";
+  if (i === 0) iconKey = "poing";
+  else if (i === 1 && this.skills.Armes >= 1) iconKey = "gun";
+  else if (i === 2 && this.skills.Mobilité >= 4) iconKey = "jetpack";
+  const icon = this.add.image(startX + i * spacing, startY, iconKey)
+    .setScrollFactor(0)
+    .setDepth(20)
+    .setScale(0.30);
+  const frame = this.add.image(startX + i * spacing, startY, "cadre")
+    .setScrollFactor(0)
+    .setDepth(21)
+    .setScale(0.35);
+  this.weaponUI.push({ icon, frame });
+}
 
-    const startX = 1045; // position X du premier slot
-    const startY = 665;  // position Y
-    const spacing = 90; // espacement horizontal entre icônes=
 
-    for (let i = 0; i < this.weaponModes.length; i++) {
-        let iconKey = "vide"; // par défaut
 
-        if (i === 0) iconKey = "poing"; // poing toujours dispo
-        else if (i === 1 && this.skills.Armes >= 1) iconKey = "gun";
-        else if (i === 2 && this.skills.Mobilité >= 4) iconKey = "jetpack";
+    // 🔁 Changement d'arme avec P
+this.input.keyboard.on("keydown-P", () => {
+  let tries = 0;
+  do {
+    this.selectedWeaponIndex = (this.selectedWeaponIndex + 1) % 3;
+    tries++;
+  } while (!this.isWeaponUnlocked(this.selectedWeaponIndex) && tries < 3);
 
-        // icône
-        const icon = this.add.image(startX + i * spacing, startY, iconKey)
-            .setScrollFactor(0)
-            .setDepth(20)
-            .setScale(0.30);
-
-        // cadre
-        const frame = this.add.image(startX + i * spacing, startY, "cadre")
-            .setScrollFactor(0)
-            .setDepth(21)
-            .setScale(0.35);
-
-        this.weaponUI.push({ icon, frame });
-    }
-
-    // touche P pour changer de mode
-    this.input.keyboard.on("keydown-P", () => {
-    let nextIndex = this.selectedWeaponIndex;
-
-    do {
-        nextIndex = (nextIndex + 1) % this.weaponModes.length;
-    } while (!this.isWeaponUnlocked(nextIndex) && nextIndex !== this.selectedWeaponIndex);
-
-    // si au moins un mode est dispo
-    if (this.isWeaponUnlocked(nextIndex)) {
-        this.selectedWeaponIndex = nextIndex;
-        this.attackMode = this.weaponModes[this.selectedWeaponIndex];
-        this.refreshWeaponUI();
-        console.log("Mode :", this.attackMode);
-    }
+  this.attackMode = ["melee", "gun", "jetpack"][this.selectedWeaponIndex];
+  this.refreshWeaponUI();
 });
 
 
+
+
+
     this.refreshWeaponUI();
+    this.updateWeaponModes();
 
 
 
@@ -1165,7 +1165,8 @@ map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset
         this.updateSkillsHUD(this.skillPoints);
         this.skill.play();
                     
-                    this.refreshWeaponUI();
+                    this.updateWeaponModes();
+
                 }
 
                 if (skill === "Armes") {
@@ -1254,6 +1255,10 @@ this.select.play();
   this.player.setVelocityX(0);
 }
 
+if (this.player.body.blocked.down) {
+    this.jetpackUsed = false;
+}
+
 if (!this.player.body.blocked.down) {
   if (this.right) {
     if (this.player.hasWeapon) {
@@ -1270,22 +1275,37 @@ if (!this.player.body.blocked.down) {
   }
 }
 if (this.clavier.up.isDown && this.player.body.blocked.down) {
-  this.player.setVelocityY(-this.playerSpeed);
-  if (this.right) {
-    if (this.player.hasWeapon) {
-      this.player.anims.play("anim_saut_droite_arme", true);
-    } else {
-      this.player.anims.play("anim_saut_droite", true);
+    // Normal ground jump
+    this.player.setVelocityY(-this.playerJump);
+
+    if (this.right) {
+        this.player.anims.play(this.player.hasWeapon ? "anim_saut_droite_arme" : "anim_saut_droite", true);
+    } else if (this.left) {
+        this.player.anims.play(this.player.hasWeapon ? "anim_saut_gauche_arme" : "anim_saut_gauche", true);
     }
-  } else if (this.left) {
-    if (this.player.hasWeapon) {
-      this.player.anims.play("anim_saut_gauche_arme", true);
-    }
-    else {
-      this.player.anims.play("anim_saut_gauche", true);
-    }
-  }
 }
+else if (
+    Phaser.Input.Keyboard.JustDown(this.clavier.up) &&   // only once per press
+    !this.player.body.blocked.down &&                   // only in air
+    this.attackMode === "jetpack" &&                    // only if jetpack mode
+    this.playerMana >= this.jetpackManaCost             // enough mana
+) {
+    // Jetpack jump
+    this.player.setVelocityY(-this.playerJump * 0.9);
+
+    this.playerMana -= this.jetpackManaCost;
+    this.updatePlayerManaBar();
+
+    if (this.right) {
+        this.player.anims.play(this.player.hasWeapon ? "anim_saut_droite_arme" : "anim_saut_droite", true);
+    } else if (this.left) {
+        this.player.anims.play(this.player.hasWeapon ? "anim_saut_gauche_arme" : "anim_saut_gauche", true);
+    }
+
+    // Sound + particles
+    this.sound.play("jetpack");
+}
+
 
 const isMoving = (this.clavier.left.isDown || this.clavier.right.isDown);
 const onGround = this.player.body.blocked.down;
@@ -1430,6 +1450,11 @@ this.projectiles.children.each((proj) => {
 
 
 
+if (!this.isWeaponUnlocked(this.selectedWeaponIndex)) {
+    this.selectedWeaponIndex = 0;
+    this.attackMode = this.weaponModes[0];
+    this.refreshWeaponUI();
+}
 
 
 
@@ -1492,7 +1517,7 @@ updatePlayerXPBar() {
     
     // Redémarrer la scène après 3 secondes
     this.time.delayedCall(3000, () => {
-        this.scene.restart();
+        this.scene.start("selection");
     });
     
     
@@ -1602,7 +1627,7 @@ perdreVie(damage = 1) {
         }).setOrigin(0.5);
         // Redémarrer après 1.5s
         this.time.delayedCall(1500, () => {
-            this.scene.restart();
+        this.scene.start("selection");
         });
         
         
@@ -1614,7 +1639,7 @@ perdreVie(damage = 1) {
 
 spawnPet() {
   // PET
-    this.pet = this.physics.add.sprite(this.player.x + 50, this.player.y, "img_perso");
+    this.pet = this.physics.add.sprite(this.player.x + 50, this.player.y, "img_pet");
     this.pet.body.allowGravity = false;
     this.petMode = "follow"; // "follow" = oscillation autour du joueur, "attack" = attaque ennemi
     this.petDamage = 1;      // damage per hit
@@ -1918,7 +1943,8 @@ attackGun() {
 
 
 refreshWeaponUI() {
-    for (let i = 0; i < this.weaponModes.length; i++) {
+    for (let i = 0; i < this.weaponUI.length; i++) {
+
         let iconKey = "vide";
 
         if (i === 0) iconKey = "poing"; // poing toujours dispo
@@ -1927,14 +1953,14 @@ refreshWeaponUI() {
 
         this.weaponUI[i].icon.setTexture(iconKey);
 
-        // cadre normal ou sélectionné
-        if (i === this.selectedWeaponIndex) {
-            this.weaponUI[i].frame.setTexture("cadreselect");
-        } else {
-            this.weaponUI[i].frame.setTexture("cadre");
-        }
+    const isSelected = i === this.selectedWeaponIndex;
+    this.weaponUI[i].frame.setTexture(isSelected ? "cadreselect" : "cadre");
     }
 }
+
+
+
+
 
 isWeaponUnlocked(index) {
     if (index === 0) return true; // poing toujours dispo
@@ -2277,6 +2303,20 @@ scheduleOwlSound() {
 
 
 
+updateWeaponModes() {
+    this.weaponModes = ["melee"];
+
+    if (this.skills.Armes >= 1) this.weaponModes.push("gun");
+    if (this.skills.Mobilité >= 4) this.weaponModes.push("jetpack");
+
+    if (this.selectedWeaponIndex >= this.weaponModes.length) {
+        this.selectedWeaponIndex = 0;
+        this.attackMode = this.weaponModes[0];
+    }
+
+    this.refreshWeaponUI();
+}
+
 
 
 
@@ -2352,7 +2392,9 @@ applyArmesStats() {
     if (lvl >= 4) this.gunRange = 600;                    // lvl 4
     if (lvl >= 5) this.gunFireRate = 200;                 // lvl 5
 
-    this.refreshWeaponUI();
+    this.updateWeaponModes();
+
+
 }
 
 
@@ -2426,8 +2468,11 @@ applyMobiliteStats() {
 
     if (lvl >= 5) {
         this.dashManaCost = 1;     // lvl 5 → dash & jetpack coûtent moins
-        this.jetpackManaCost = 3;
+        this.jetpackManaCost = 2;
     }
+    this.updateWeaponModes();
+
+
 }
 
 }

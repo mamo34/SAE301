@@ -21,7 +21,7 @@ export default class debut extends Phaser.Scene {
 
     //Musik
     this.load.audio("music", "./assets/musique_sfx/musique_1.mp3");
-    this.load.audio("whoosh", "./assets/musique_sfx/whoosh1.mp3");
+    this.load.audio("whoosh", "./assets/musique_sfx/whoosh.mp3");
     this.load.audio("select", "./assets/musique_sfx/select.mp3");
     this.load.audio("click", "./assets/musique_sfx/click.mp3");
   }
