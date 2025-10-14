@@ -66,10 +66,20 @@ this.playerSpeed = 120;         // vitesse horizontale de base
       frameWidth: 32,
       frameHeight: 70
     });
+    this.load.spritesheet("perso_jetpack", "./assets/perso_jetpack.png", {
+  frameWidth: 32,
+  frameHeight: 65
+});
 
     this.load.image("img_enemy", "./assets/enemy.png");
-    this.load.image("img_enemy1", "./assets/enemy1.png");
-    this.load.image("img_enemy2", "./assets/enemy2.png");
+    this.load.spritesheet("img_enemy1", "./assets/enemy1.png", {
+      frameWidth: 128,
+      frameHeight: 220
+    });
+    this.load.spritesheet("img_enemy2", "./assets/enemy2.png", {
+      frameWidth: 96,
+      frameHeight: 96
+    });
     this.load.spritesheet("img_enemy3", "./assets/enemy3.png", {
       frameWidth: 32,
       frameHeight: 32
@@ -90,7 +100,7 @@ this.playerSpeed = 120;         // vitesse horizontale de base
     this.load.image("img_gold", "./assets/engrenage.png");
     this.load.image("fleche", "./assets/fleche.png");
     this.load.image("title", "./assets/title.png");
-    this.load.image("boutonRetour", "./assets/boutonretour.png");
+    this.load.image("ecran_mort", "./assets/gameover.jpg");
 
 
     this.load.image("cadre_mana", "./assets/barre_mana.png");
@@ -116,6 +126,9 @@ this.playerSpeed = 120;         // vitesse horizontale de base
 this.load.image("boutonControles", "./assets/boutoncontroles.png");
     this.load.image("boutonJouer", "./assets/boutonjouer.png");
     this.load.image("boutonSkills", "./assets/skills.png");
+    this.load.image("boutonmenu", "./assets/boutonmenu.png");
+    this.load.image("boutonrejouer", "./assets/boutonrejouer.png");
+    this.load.image("boutonRetour", "./assets/boutonretour.png");
 
 
   // icônes
@@ -225,15 +238,15 @@ this.mdr = this.sound.add("mdr", { volume: 0.1, loop: false });
   0
 );
 this.platformLayer.setCollisionByProperty({ dur: true });
-map.createLayer("ladder_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
-    map.createLayer("decoration_back_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
+map.createLayer("ladder_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12], 0, 0);
+    map.createLayer("decoration_back_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12], 0, 0);
     
     // Activer collisions sur tuiles ayant la propriété { dur: true }
     this.platformLayer.setCollisionByProperty({ dur: true });
 
 
     // PLAYER
-this.player = this.physics.add.sprite(100, 700, "img_perso");
+this.player = this.physics.add.sprite(400, 700, "img_perso");
 this.player.setBounce(0.2);
 this.player.setCollideWorldBounds(false);
 this.player.hasWeapon = false;
@@ -666,6 +679,19 @@ this.player.setData('invulnerable', false);
         frameRate: 10
       });
 
+      this.anims.create({
+  key: "jetpack_right",
+  frames: [{ key: "perso_jetpack", frame: 0 }],
+  frameRate: 1,
+  repeat: -1
+});
+this.anims.create({
+  key: "jetpack_left",
+  frames: [{ key: "perso_jetpack", frame: 1 }],
+  frameRate: 1,
+  repeat: -1
+});
+
 
 
       this.anims.create({
@@ -725,6 +751,48 @@ this.anims.create({
   key: "spider_jump_left",
   frames: [ { key: "img_enemy3", frame: 3 } ],  // frame 4
   frameRate: 1,
+  repeat: -1
+});
+
+this.anims.create({
+  key: "enemy2_right",
+  frames: this.anims.generateFrameNumbers("img_enemy2", { start: 0, end: 2 }),
+  frameRate: 8,
+  repeat: -1
+});
+this.anims.create({
+  key: "enemy2_left",
+  frames: this.anims.generateFrameNumbers("img_enemy2", { start: 3, end: 5 }),
+  frameRate: 8,
+  repeat: -1
+});
+
+// Marche droite
+this.anims.create({
+  key: "enemy1_walk_right",
+  frames: this.anims.generateFrameNumbers("img_enemy1", { start: 0, end: 3 }),
+  frameRate: 8,
+  repeat: -1
+});
+// Tir droite
+this.anims.create({
+  key: "enemy1_shoot_right",
+  frames: this.anims.generateFrameNumbers("img_enemy1", { start: 4, end: 6 }),
+  frameRate: 3,
+  repeat: 0
+});
+// Tir gauche
+this.anims.create({
+  key: "enemy1_shoot_left",
+  frames: this.anims.generateFrameNumbers("img_enemy1", { start: 7, end: 9 }),
+  frameRate: 3,
+  repeat: 0 
+});
+// Marche gauche
+this.anims.create({
+  key: "enemy1_walk_left",
+  frames: this.anims.generateFrameNumbers("img_enemy1", { start: 10, end: 13 }),
+  frameRate: 8,
   repeat: -1
 });
 
@@ -882,8 +950,8 @@ this.physics.add.collider(this.enemy12, this.platformLayer);
     if (this.enemy8.startPatrol) this.enemy8.startPatrol(2750, 3300, 70);
     if (this.enemy9.startPatrol) this.enemy9.startPatrol(2500, 2900, 70);
 
-    if (this.enemy10.startPatrol) this.enemy10.startPatrol(800, 1200, 70);
-    if (this.enemy11.startPatrol) this.enemy11.startPatrol(1600, 2500, 70);
+    if (this.enemy10.startPatrolDiagonal) this.enemy10.startPatrolDiagonal(800, 1200, 40, 1700, 1900, 20);
+    if (this.enemy11.startPatrolDiagonal) this.enemy11.startPatrolDiagonal(1600, 2500, 60, 1700, 1900, 40);
     if (this.enemy12.startPatrol) this.enemy12.startPatrol(200, 1000, 70);
 
 
@@ -1004,7 +1072,7 @@ this.events.on("update", () => {
 });
 
 // MUSIQUE : préparation des musiques
-this.musiqueMap1 = this.sound.add('musiqueMap1', { volume: 0.4, loop: true });
+this.musiqueMap1 = this.sound.add('musiqueMap1', { volume: 0.5, loop: true });
 this.musiqueMap2 = this.sound.add('musiqueMap2', { volume: 0.2, loop: true });
 this.zoneActuelle = "A";
 this.musiqueMap1.play(); // joue la musique Map1 au lancement
@@ -1110,7 +1178,7 @@ this.input.keyboard.on("keydown-P", () => {
 
 
 
-map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11], 0, 0);
+map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12], 0, 0);
 
     this.activeButtons = this.menuButtons || [];
 
@@ -1308,6 +1376,36 @@ else if (
     this.sound.play("jetpack");
 }
 
+// --- Jetpack visuel ---
+if (!this.jetpackGroundFrames) this.jetpackGroundFrames = 0;
+if (this.attackMode === "jetpack" && this.hasJetpack && !this.player.body.blocked.down) {
+  this.jetpackGroundFrames = 0;
+  if (this.player.texture.key !== "perso_jetpack") {
+    this.player.setTexture("perso_jetpack");
+    this.player.setDisplaySize(32, 70);
+  }
+  // Correction direction : utilise la dernière direction connue
+  if (this.left) {
+    this.player.anims.play("jetpack_left", true);
+  } else {
+    this.player.anims.play("jetpack_right", true);
+  }
+} else if (this.player.body.blocked.down) {
+  this.jetpackGroundFrames++;
+  // Quand on touche le sol avec le jetpack, repasse en mode poing
+  if (this.attackMode === "jetpack" && this.jetpackGroundFrames === 1) {
+    this.selectedWeaponIndex = 0;
+    this.attackMode = "melee";
+    if (this.refreshWeaponUI) this.refreshWeaponUI();
+    if (this.updateWeaponModes) this.updateWeaponModes();
+  }
+  if (this.player.texture.key === "perso_jetpack" && this.jetpackGroundFrames > 5) {
+    this.player.setTexture("img_perso");
+    this.player.setDisplaySize(32, 70);
+  }
+} else {
+  this.jetpackGroundFrames = 0;
+}
 
 const isMoving = (this.clavier.left.isDown || this.clavier.right.isDown);
 const onGround = this.player.body.blocked.down;
@@ -1591,59 +1689,104 @@ perdreVie(damage = 1) {
         
         
     } else {
-        // Game over (une seule fois)
-        if (this.gameOver) return;
-        this.playerDeath();
-        // Stopper toute action de jeu
-        if (this.petShootEvent) this.petShootEvent.remove(false);
-        this.physics.pause();
-        // Désactiver entités et nettoyer projectiles
-        if (this.enemy0) this.enemy0.setActive(false).setVisible(false);
-        if (this.enemy1) this.enemy1.setActive(false).setVisible(false);
-        if (this.enemy2) this.enemy2.setActive(false).setVisible(false);
-        if (this.enemy4) this.enemy4.setActive(false).setVisible(false);
-        if (this.enemy6) this.enemy6.setActive(false).setVisible(false);
-        if (this.enemy7) this.enemy7.setActive(false).setVisible(false);
-        if (this.enemy8) this.enemy8.setActive(false).setVisible(false);
-        if (this.enemy9) this.enemy9.setActive(false).setVisible(false);
-        if (this.enemy10) this.enemy10.setActive(false).setVisible(false);
-        if (this.enemy11) this.enemy11.setActive(false).setVisible(false);
-        if (this.enemy12) this.enemy12.setActive(false).setVisible(false);
-        if (this.projectiles) this.projectiles.clear(true, true);
-        if (this.enemy0?.projectiles) this.enemy0.projectiles.clear(true, true);
-        if (this.enemy1?.projectiles) this.enemy1.projectiles.clear(true, true);
-        if (this.enemy2?.projectiles) this.enemy2.projectiles.clear(true, true);
-        if (this.enemy4?.projectiles) this.enemy4.projectiles.clear(true, true);
-        if (this.enemy6?.projectiles) this.enemy6.projectiles.clear(true, true);
-        if (this.enemy7?.projectiles) this.enemy7.projectiles.clear(true, true);
-        if (this.enemy8?.projectiles) this.enemy8.projectiles.clear(true, true);
-        if (this.enemy9?.projectiles) this.enemy9.projectiles.clear(true, true);
-        if (this.enemy10?.projectiles) this.enemy10.projectiles.clear(true, true);
-        if (this.enemy11?.projectiles) this.enemy11.projectiles.clear(true, true);
-        if (this.enemy12?.projectiles) this.enemy12.projectiles.clear(true, true);
-        if (this.player) this.player.setTint(0xff0000);
-        this.add.text(400, 300, 'GAME OVER', { 
-            fontSize: '32px', 
-            fill: '#ffffff',
-            fontFamily: 'Arial'
-        }).setOrigin(0.5);
-        // Redémarrer après 1.5s
-        this.time.delayedCall(1500, () => {
-  // Reset complet des variables avant de relancer la scène
-  this.playerHealth = 50;
-  this.playerMaxHealth = 50;
-  this.playerLevel = 0;
-  this.playerXP = 0;
-  this.playerGold = 0;
-  this.hasDash = false;
-  this.hasJetpack = false;
-  this.skillPoints = 0;
-  this.skills = { Armes: 0, Survie: 0, Mobilité: 0 };
-  this.weaponModes = ['melee'];
-  this.selectedWeaponIndex = 0;
-  // Ajoute d'autres resets si besoin (mana, etc.)
-  this.scene.restart();
-        });
+    // Game over (une seule fois)
+    if (this.gameOver) return;
+    this.gameOver = true;
+    if (this.petShootEvent) this.petShootEvent.remove(false);
+    this.physics.pause();
+    // Désactiver entités et nettoyer projectiles
+    [this.enemy0, this.enemy1, this.enemy2, this.enemy4, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11, this.enemy12].forEach(e => { if (e) e.setActive(false).setVisible(false); });
+    if (this.projectiles) this.projectiles.clear(true, true);
+    [this.enemy0, this.enemy1, this.enemy2, this.enemy4, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11, this.enemy12].forEach(e => { if (e?.projectiles) e.projectiles.clear(true, true); });
+    if (this.player) this.player.setTint(0xff0000);
+
+    // Création de l'écran de mort personnalisé
+  // Cacher le HUD des points dès l'affichage du screen de mort
+    this.hidePauseMenu();
+    const hudPoints = document.getElementById('hud-points');
+      if (hudPoints) hudPoints.style.display = 'none';
+    
+  const cam = this.cameras.main;
+  const deathScreenX = cam.scrollX + cam.width / 2;
+  const deathScreenY = cam.scrollY + cam.height / 2;
+  this.deathScreen = this.add.container(deathScreenX, deathScreenY).setDepth(999999).setVisible(true);
+  const bg = this.add.image(0, 0, "ecran_mort").setOrigin(0.5).setScale(1).setDepth(1);
+  this.deathScreen.add(bg);
+  // Position horizontale en bas
+  const btnY = 250; // position verticale (ajuste selon le fond)
+  const btnSpacing = 220; // espace horizontal entre les boutons
+  const btnRejouer = this.add.image(-btnSpacing, btnY, "boutonrejouer").setOrigin(0.5).setScale(0.3).setDepth(2);
+  const btnMenu = this.add.image(btnSpacing, btnY, "boutonmenu").setOrigin(0.5).setScale(0.3).setDepth(2);
+  this.deathScreen.add([btnRejouer, btnMenu]);
+  this.deathScreen.setVisible(true);
+    let selectedIndex = 0;
+    const buttons = [btnRejouer, btnMenu];
+    const updateSelection = () => {
+      buttons.forEach((btn, i) => {
+        btn.setScale(i === selectedIndex ? 0.7 : 0.5);
+      });
+    };
+    updateSelection();
+    this.deathScreenKeyLeft = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
+    this.deathScreenKeyRight = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+    this.deathScreenKeyUp = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+    this.deathScreenKeyDown = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+    this.deathScreenKeyI = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I);
+    const onKeyDown = (event) => {
+      if (event.code === "ArrowLeft" || event.code === "ArrowUp") {
+        selectedIndex = (selectedIndex - 1 + buttons.length) % buttons.length;
+        updateSelection();
+      } else if (event.code === "ArrowRight" || event.code === "ArrowDown") {
+        selectedIndex = (selectedIndex + 1) % buttons.length;
+        updateSelection();
+      } else if (event.code === "KeyI") {
+        cleanupListeners();
+        this.deathScreen.destroy();
+        this.sound.stopAll(); // Stop tous les sons
+        if (selectedIndex === 0) {
+          this.resetGlobalStats() 
+          this.scene.restart();
+        } else {
+          this.resetGlobalStats() 
+          // Menu : aller à la scène 'debut'
+          // Cacher le HUD des points
+          const hudPoints = document.getElementById('hud-points');
+          if (hudPoints) hudPoints.style.display = 'none';
+          // Lancer la musique du menu principal
+          if (this.sound.get('musiquemap1')) this.sound.get('musiquemap1').stop();
+          if (this.sound.get('musique_1')) this.sound.get('musique_1').play({ loop: true });
+          this.scene.start("debut");
+        }
+      }
+    };
+    this.input.keyboard.on("keydown", onKeyDown);
+    const cleanupListeners = () => {
+      this.input.keyboard.removeListener("keydown", onKeyDown);
+      this.deathScreenKeyLeft.destroy();
+      this.deathScreenKeyRight.destroy();
+      this.deathScreenKeyUp.destroy();
+      this.deathScreenKeyDown.destroy();
+      this.deathScreenKeyI.destroy();
+    };
+    if (this.player) {
+      this.player.setVelocity(0);
+      this.player.setActive(false);
+    }
+    this.input.keyboard.enabled = true;
+    // Cacher tous les éléments HUD Phaser
+    if (this.skillUI_HUD) this.skillUI_HUD.setVisible(false);
+    if (this.cadreVie) this.cadreVie.setVisible(false);
+    if (this.cadreMana) this.cadreMana.setVisible(false);
+    if (this.cadreXP) this.cadreXP.setVisible(false);
+    if (this.goldIcon) this.goldIcon.setVisible(false);
+    if (this.skillUI_Menu) this.skillUI_Menu.setVisible(false);
+    if (this.weaponUIContainer) this.weaponUIContainer.setVisible(false);
+    // Cacher le HUD HTML (or, level, etc.)
+    const hudGold = document.getElementById('hud-gold');
+    if (hudGold) hudGold.style.display = 'none';
+    const hudLevel = document.getElementById('hud-level');
+    if (hudLevel) hudLevel.style.display = 'none';
+    // Ajoute d'autres éléments HTML à cacher si besoin
         
         
     }
@@ -1715,6 +1858,7 @@ this.petShootEvent = this.time.addEvent({
       this.physics.moveTo(bullet, target.x, target.y, 200);
 
       // Reprendre le mouvement du pet après 0.15s
+
       this.time.delayedCall(150, () => {
         this.pet.body.setVelocity(originalVelocityX, originalVelocityY);
       });
@@ -1730,6 +1874,8 @@ this.enemies.getChildren().forEach(enemy => {
   enemy.isPetOverlapping = false;
   enemy.petDamageEvent = null;
 });
+
+
 
 // When the pet first overlaps an enemy, start a repeating damage event (if none yet)
 this.physics.add.overlap(this.pet, this.enemies, (pet, enemy) => {
@@ -1983,7 +2129,6 @@ isWeaponUnlocked(index) {
     if (index === 2) return this.skills.Mobilité >= 4;
     return false;
 }
-
 
 // --- CREATION DU MENU PAUSE ---
 showPauseMenu() {
@@ -2332,9 +2477,45 @@ updateWeaponModes() {
     this.refreshWeaponUI();
 }
 
-
-
-
+// Nouvelle méthode pour reset toutes les stats du joueur
+  resetGlobalStats() {
+  this.playerHealth = 50;
+  this.playerMaxHealth = 50;
+  this.degatPlayerCorpsAcorps = 2;
+  this.baseXP = 10;
+  this.growth = 1.2;
+  this.playerLevel = 0;
+  this.playerXP = 0;
+  this.gunFireRate = 500;
+  this.gunRange = 370;
+  this.lastShotTime = 0;
+  this.playerSpeed = 120;
+  this.playerJump = 160;
+  this.hasDash = false;
+  this.hasJetpack = false;
+  this.dashManaCost = 5;
+  this.jetpackManaCost = 5;
+  this.skills = { Armes: 0, Survie: 0, Mobilité: 0 };
+  this.weaponModes = ['melee'];
+  this.selectedWeaponIndex = 0;
+  this.maxSkillLevel = 5;
+  this.skillPoints = 0;
+  this.selectedSkillIndex = 0;
+  this.skillKeys = ["Armes", "Survie", "Mobilité"];
+  this.playerGold = 0;
+  this.playerMana = 0;
+  this.attackMode = 'melee';
+  // --- Correction crash pet ---
+  if (this.pet) {
+    this.pet.destroy();
+    this.pet = undefined;
+  }
+  // Met à jour le HUD après reset
+  if (this.updateHUD) this.updateHUD(this.playerLevel);
+  if (this.updateGoldHUD) this.updateGoldHUD(this.playerGold);
+  if (this.updatePointsHUD) this.updatePointsHUD(this.skillPoints);
+  if (this.updateSkillsHUD) this.updateSkillsHUD(this.skillPoints);
+  }
 
 
 
@@ -2488,6 +2669,4 @@ applyMobiliteStats() {
     this.updateWeaponModes();
 
 
-}
-
-}
+}}
