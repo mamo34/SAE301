@@ -120,6 +120,8 @@ this.playerSpeed = 120;         // vitesse horizontale de base
   this.load.image("tiles9", "./src/map/background_2.png");
   this.load.image("tiles10", "./src/map/sol_meca.png");
   this.load.image("tiles11", "./src/map/sol_mine.png");
+  this.load.image("tiles12", "./src/map/tileset_meca.png");
+
 
 
 
@@ -910,9 +912,9 @@ while (this.playerXP >= this.xpForNextLevel(this.playerLevel)) {
     this.enemy8 = new EnemyParabolic(this, 3050, 400, this.player, 10, 5, 5, 200);
     this.enemy9 = new EnemyParabolic(this, 2700, 400, this.player, 10, 5, 5, 200);
 
-    this.enemy10 = new EnemyCone(this, 1000, 1900, this.player, 50, 5, 10, 200);
-    this.enemy11 = new EnemyCone(this, 2000, 1900, this.player, 50, 5, 10, 200);
-    this.enemy12 = new EnemyBowling(this, 500, 1900, this.player, 20, 1000, 1000, 1200);
+    this.enemy10 = new EnemyCone(this, 1000, 4000, this.player, 50, 5, 10, 200);
+    this.enemy11 = new EnemyCone(this, 2000, 4100, this.player, 50, 5, 10, 200);
+    this.enemy12 = new EnemyBowling(this, 500, 2200, this.player, 20, 1000, 1000, 1200);
 
 
 
@@ -950,8 +952,8 @@ this.physics.add.collider(this.enemy12, this.platformLayer);
     if (this.enemy8.startPatrol) this.enemy8.startPatrol(2750, 3300, 70);
     if (this.enemy9.startPatrol) this.enemy9.startPatrol(2500, 2900, 70);
 
-    if (this.enemy10.startPatrolDiagonal) this.enemy10.startPatrolDiagonal(800, 1200, 40, 1700, 1900, 20);
-    if (this.enemy11.startPatrolDiagonal) this.enemy11.startPatrolDiagonal(1600, 2500, 60, 1700, 1900, 40);
+    if (this.enemy10.startPatrolDiagonal) this.enemy10.startPatrolDiagonal(800, 1200, 40, 1900, 2200, 20);
+    if (this.enemy11.startPatrolDiagonal) this.enemy11.startPatrolDiagonal(1600, 2500, 60, 1900, 2200, 40);
     if (this.enemy12.startPatrol) this.enemy12.startPatrol(200, 1000, 70);
 
 
@@ -1041,15 +1043,37 @@ this.teleportA = this.add.rectangle(3440, 700, 50, 100);
 this.physics.add.existing(this.teleportA, true);
 
 // Téléporteur B
-this.teleportB = this.add.rectangle(150, 1920, 100, 100);
+this.teleportB = this.add.rectangle(192, 1600, 100, 100);
 this.physics.add.existing(this.teleportB, true);
+
+// --- Nouveau téléporteur ---
+this.teleportC = this.add.rectangle(2630, 1600, 100, 50);
+this.physics.add.existing(this.teleportC, true);
+this.teleportD = this.add.rectangle(30, 2010, 50, 50);
+this.physics.add.existing(this.teleportD, true); 
+
+// --- Téléporteur supplémentaire ---
+this.teleportE = this.add.rectangle(1000, 1600, 50, 80);
+this.physics.add.existing(this.teleportE, true);
+this.teleportF = this.add.rectangle(1370, 2240, 50, 50);
+this.physics.add.existing(this.teleportF, true);
 
 // Pour debug → affiche en rouge (tu peux commenter après)
 this.teleportA.setFillStyle?.(0xff0000, 0.3);
 this.teleportB.setFillStyle?.(0x0000ff, 0.3);
 
+this.teleportC.setFillStyle?.(0x00ff00, 0.3);
+this.teleportD.setFillStyle?.(0xffff00, 0.3);
+
+this.teleportE.setFillStyle?.(0x00ffff, 0.3);
+this.teleportF.setFillStyle?.(0xff00ff, 0.3);
+
 // Flag pour savoir si le joueur est dedans
 this.currentTeleportZone = null;
+
+this.currentTeleportZoneCD = null;
+
+this.currentTeleportZoneEF = null;
 
 // Overlap avec A
 this.physics.add.overlap(this.player, this.teleportA, () => {
@@ -1061,6 +1085,24 @@ this.physics.add.overlap(this.player, this.teleportB, () => {
     this.currentTeleportZone = "B";
 }, null, this);
 
+// Overlap avec C
+this.physics.add.overlap(this.player, this.teleportC, () => {
+  this.currentTeleportZoneCD = "C";
+}, null, this);
+// Overlap avec D
+this.physics.add.overlap(this.player, this.teleportD, () => {
+  this.currentTeleportZoneCD = "D";
+}, null, this);
+
+// Overlap avec E
+this.physics.add.overlap(this.player, this.teleportE, () => {
+  this.currentTeleportZoneEF = "E";
+}, null, this);
+// Overlap avec F
+this.physics.add.overlap(this.player, this.teleportF, () => {
+  this.currentTeleportZoneEF = "F";
+}, null, this);
+
 // Vérif sortie : si plus de contact, reset
 this.events.on("update", () => {
     if (
@@ -1069,6 +1111,20 @@ this.events.on("update", () => {
     ) {
         this.currentTeleportZone = null;
     }
+
+  if (
+    !this.physics.overlap(this.player, this.teleportC) &&
+    !this.physics.overlap(this.player, this.teleportD)
+  ) {
+    this.currentTeleportZoneCD = null;
+  }
+
+  if (
+    !this.physics.overlap(this.player, this.teleportE) &&
+    !this.physics.overlap(this.player, this.teleportF)
+  ) {
+    this.currentTeleportZoneEF = null;
+  }
 });
 
 // MUSIQUE : préparation des musiques
@@ -1097,6 +1153,20 @@ this.keyI.on('down', () => {
     this.musiqueMap1.play();
     this.zoneActuelle = "A";
   }
+
+  // Nouveau téléporteur C <-> D
+  if (this.currentTeleportZoneCD === "C") {
+    this.fadeOutAndTeleport(500, this.teleportD.x, this.teleportD.y);
+  } else if (this.currentTeleportZoneCD === "D") {
+    this.fadeOutAndTeleport(500, this.teleportC.x, this.teleportC.y);
+  }
+
+    // Téléporteur E <-> F
+    if (this.currentTeleportZoneEF === "E") {
+      this.fadeOutAndTeleport(500, this.teleportF.x, this.teleportF.y);
+    } else if (this.currentTeleportZoneEF === "F") {
+      this.fadeOutAndTeleport(500, this.teleportE.x, this.teleportE.y);
+    }
 });
 
 let degat_gun = 1;

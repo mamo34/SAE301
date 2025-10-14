@@ -12,6 +12,9 @@ export default class EnemyParabolic extends Enemy {
     this._prevVelocity = { x: 0, y: 0 };
     this._pausedTweens = [];
 
+  // Flag pour bloquer toute animation pendant l'attaque
+  this.isAttackingAnim = false;
+
     // attendre un "tick" pour être sûr que this.scene est initialisé
     scene.time.delayedCall(0, () => {
       this.scheduleNextShot();
@@ -92,37 +95,39 @@ export default class EnemyParabolic extends Enemy {
   // Selon comment ton Enemy est implémenté, soit il utilise `preUpdate`, soit `update`.
   // On surcharge les deux pour être sûr.
   preUpdate(time, delta) {
-    // si on est en préparation, on force la vitesse à 0 et on ne propage pas l'update
-    if (this.isPreparing) {
-      if (this.body) this.body.setVelocity(0, 0);
-      // Affiche frame idle selon la dernière direction
-      this.anims.stop();
-      if (this._lastDirection === 1) {
-        this.setFrame(0); // idle droite
-      } else {
-        this.setFrame(13); // idle gauche
-      }
-      return;
-    }
-    // Only call parent preUpdate if not charging
-    if (!this.isPreparing && super.preUpdate) super.preUpdate(time, delta);
-    // Animation de marche selon la direction
-    if (this.body && this.body.velocity.x > 0) {
-      this.anims.play("enemy1_walk_right", true);
-      this._lastDirection = 1;
-    } else if (this.body && this.body.velocity.x < 0) {
-      this.anims.play("enemy1_walk_left", true);
-      this._lastDirection = -1;
+  // If charging, freeze movement and show idle frame
+  if (this.isPreparing) {
+    if (this.body) this.body.setVelocity(0, 0);
+    this.anims.stop();
+    if (this._lastDirection === 1) {
+      this.setFrame(0); // idle right
     } else {
-      // Si immobile et pas en préparation, affiche frame idle
-      this.anims.stop();
-      if (this._lastDirection === 1) {
-        this.setFrame(0);
-      } else {
-        this.setFrame(13);
-      }
+      this.setFrame(13); // idle left
+    }
+    return;
+  }
+  // Si animation d'attaque en cours, ne rien changer !
+  if (this.isAttackingAnim) return;
+  // Only call parent preUpdate if not charging
+  if (super.preUpdate && !this.isPreparing) super.preUpdate(time, delta);
+
+  // Animation de marche selon la direction
+  if (this.body && this.body.velocity.x > 0) {
+    this.anims.play("enemy1_walk_right", true);
+    this._lastDirection = 1;
+  } else if (this.body && this.body.velocity.x < 0) {
+    this.anims.play("enemy1_walk_left", true);
+    this._lastDirection = -1;
+  } else {
+    // Si immobile et pas en préparation, affiche frame idle
+    this.anims.stop();
+    if (this._lastDirection === 1) {
+      this.setFrame(0);
+    } else {
+      this.setFrame(13);
     }
   }
+}
 
   update(time, delta) {
     // idem pour update() si le parent l'utilise
@@ -144,7 +149,9 @@ export default class EnemyParabolic extends Enemy {
     const direction = this.target.x < this.x ? -1 : 1;
     this._lastDirection = direction;
     const frames = direction === 1 ? [4, 5, 6] : [9, 8, 7];
-    // Play frame by frame with 333ms delay
+
+    this.isAttackingAnim = true; // start attack anim lock
+
     this.setFrame(frames[0]);
     this.scene.time.delayedCall(333, () => {
       if (!this.active) return;
@@ -164,6 +171,8 @@ export default class EnemyParabolic extends Enemy {
 
           bullet.setVelocity(vx, vy);
           bullet.body.allowGravity = true;
+
+          this.isAttackingAnim = false; // unlock after anim
         });
       });
     });
