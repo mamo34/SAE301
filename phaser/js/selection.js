@@ -205,7 +205,7 @@ this.click = this.sound.add('click', { volume: 0.4, loop: false });
 this.select = this.sound.add('select', { volume: 0.3, loop: false });
 this.skill = this.sound.add('skill', { volume: 0.5, loop: false });
 this.sfxOwl = this.sound.add("sfxOwl", { volume: 0.8, loop: false });
-this.jetpack = this.sound.add("jetpack", { volume: 0.4, loop: false });
+this.jetpack = this.sound.add("jetpack", { volume: 0.2, loop: false });
 this.mdr = this.sound.add("mdr", { volume: 0.1, loop: false });
 
     
@@ -923,10 +923,10 @@ while (this.playerXP >= this.xpForNextLevel(this.playerLevel)) {
     this.enemy14 = new EnemyBowling(this, 600, 1620, this.player, 20, 100, 30, 200);
 
 this.enemy15 = new EnemySpider(this, 70, 2520, this.player, 10, 5, 5, 200);
-this.enemy16 = new EnemySpider(this, 300, 1600, this.player, 10, 5, 5, 200);
+this.enemy16 = new EnemySpider(this, 100, 1600, this.player, 10, 5, 5, 200);
 this.enemy17 = new EnemySpider(this, 600, 2520, this.player, 10, 5, 5, 200);
 this.enemy18 = new EnemySpider(this, 1200, 1600, this.player, 10, 5, 5, 200);
-this.enemy19 = new EnemySpider(this, 400, 2520, this.player, 10, 5, 5, 200);
+this.enemy19 = new EnemySpider(this, 1000, 2520, this.player, 10, 5, 5, 200);
 this.enemy20 = new EnemySpider(this, 2100, 1600, this.player, 10, 5, 5, 200);
 this.enemy21 = new EnemySpider(this, 1700, 1600, this.player, 10, 5, 5, 200);
 this.enemy22 = new EnemySpider(this, 2600, 1600, this.player, 10, 5, 5, 200);
@@ -1148,7 +1148,8 @@ this.physics.add.overlap(this.player, this.cameraResetZoneD, () => {
 
 this.events.on("update", () => {
   // Si le joueur n'est plus dans la zone de trigger, on remet la caméra à la normale
-    if (this._cameraLowered && !this.physics.overlap(this.player, this.cameraResetZoneD)) {
+    // Correction: vérifier que SEUL le joueur est pris en compte, pas le pet
+    if (this._cameraLowered && !this.physics.world.overlap(this.player, this.cameraResetZoneD)) {
       // Pan caméra vers la position normale avec ease-in
       this.cameras.main.pan(this.player.x, this.player.y, 800, 'Sine.easeIn');
       this.time.delayedCall(800, () => {
@@ -1625,6 +1626,7 @@ this.player.hasWeapon = false;
 
   if (this.skills["Survie"] >= 3 && !this.pet) {
   this.spawnPet();
+  this.hasPet = true;
 }
 
   if (this.skills["Survie"] >= 3 && this.pet) {
@@ -2786,7 +2788,7 @@ applySurvieStats() {
         
     }
 
-    if (lvl >= 3) {
+    if (lvl >= 3 && !this.pet) {
         this.spawnPet(); 
         this.scheduleOwlSound();
     }
