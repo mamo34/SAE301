@@ -1409,7 +1409,7 @@ this.input.keyboard.on("keydown-P", () => {
 
 
     // === Ajout du PNJ Trade ===
-    this.npcTrade = this.physics.add.sprite(96, 2310, "pnj");
+    this.npcTrade = this.physics.add.sprite(110, 2310, "pnj");
     this.npcTrade.setImmovable(true);
     this.npcTrade.setDepth(10);
     this.npcTrade.setScale(0.7);

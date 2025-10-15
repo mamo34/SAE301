@@ -64,11 +64,15 @@ export default class EnemyBowling extends Enemy {
         this.body.setVelocity(0, 0);
         this.isPreparing = true;
 
-        // Animation de charge manuelle (3 frames, 333ms chacune)
+        // Animation de charge : utilise frames droite et flip pour gauche
         const direction = this.target.x < this.x ? -1 : 1;
         this._lastDirection = direction;
-  // Correction: frames de charge gauche doivent être dans l'ordre décroissant
-  const chargeFrames = direction === -1 ? [12, 11, 10] : [4, 5, 6];
+        const chargeFrames = [4, 5, 6];
+        if (direction === -1) {
+          this.setFlipX(true);
+        } else {
+          this.setFlipX(false);
+        }
         this.setFrame(chargeFrames[0]);
         this.scene.time.delayedCall(333, () => {
           if (!this.active) return;
@@ -82,8 +86,10 @@ export default class EnemyBowling extends Enemy {
               this.attack();
               // Reprend la marche dans la bonne direction
               if (this._lastDirection === -1) {
-                this.anims.play("enemy4_walk_gauche", true);
+                this.setFlipX(true);
+                this.anims.play("enemy4_walk_droite", true);
               } else {
+                this.setFlipX(false);
                 this.anims.play("enemy4_walk_droite", true);
               }
               this.scheduleNextShot();
@@ -110,52 +116,53 @@ export default class EnemyBowling extends Enemy {
     if (this.isPreparing) {
       if (this.body) this.body.setVelocity(0, 0);
       // Stop any walk animation during charge
-      if (this.anims.isPlaying && (this.anims.currentAnim?.key === "enemy4_walk_gauche" || this.anims.currentAnim?.key === "enemy4_walk_droite")) {
+      if (this.anims.isPlaying && (this.anims.currentAnim?.key === "enemy4_walk_droite")) {
         this.anims.stop();
       }
       return;
     }
     if (super.update) super.update(time, delta);
 
+    // Détection direction réelle par vélocité
+    if (this.body) {
+      if (this.body.velocity.x > 1) {
+        this._lastDirection = 1;
+      } else if (this.body.velocity.x < -1) {
+        this._lastDirection = -1;
+      }
+    }
+
     // === Random AI quand pas en range ===
     if (time > this.randomMoveTimer) {
       this.randomMoveTimer = time + Phaser.Math.Between(1000, 3000);
       const dir = Phaser.Math.Between(-1, 1); // -1 gauche, 0 stop, 1 droite
       this.body.setVelocityX(dir * 50);
-      if (dir !== 0) {
-        // Only play walk animation if not preparing/charging
+    }
+
+    // Animation selon la vélocité
+    if (this.body) {
+      if (Math.abs(this.body.velocity.x) > 1) {
+        // Marche
+        if (this._lastDirection === -1) {
+          this.setFlipX(true);
+        } else {
+          this.setFlipX(false);
+        }
         if (!this.isPreparing) {
-          this._lastDirection = dir;
-          if (dir === -1) {
-            if (this.anims.currentAnim?.key !== "enemy4_walk_gauche") {
-              this.anims.play("enemy4_walk_gauche", true);
-            }
-          } else {
-            if (this.anims.currentAnim?.key !== "enemy4_walk_droite") {
-              this.anims.play("enemy4_walk_droite", true);
-            }
+          if (this.anims.currentAnim?.key !== "enemy4_walk_droite") {
+            this.anims.play("enemy4_walk_droite", true);
           }
         }
       } else {
-        // Si immobile, frame idle
+        // Idle
         if (this.anims.isPlaying) this.anims.stop();
-        // Frame 0 for right, frame 13 for left
-        if (this._lastDirection === 1) {
+        if (this._lastDirection === -1) {
+          this.setFlipX(true);
           this.setFrame(0);
         } else {
-          this.setFrame(13);
+          this.setFlipX(false);
+          this.setFrame(0);
         }
-      }
-    }
-    
-    // Vérifie la vélocité pour l'état idle et la direction
-    if (this.body && Math.abs(this.body.velocity.x) < 1 && Math.abs(this.body.velocity.y) < 1) {
-      // Si immobile, frame idle selon la dernière direction
-      if (this.anims.isPlaying) this.anims.stop();
-      if (this._lastDirection === 1) {
-        this.setFrame(0);
-      } else {
-        this.setFrame(13);
       }
     }
   }
