@@ -71,7 +71,7 @@ this.playerSpeed = 120;         // vitesse horizontale de base
   frameHeight: 65
 });
 
-    this.load.image("img_enemy", "./assets/enemy.png");
+    this.load.image("trade", "./assets/trade.png");
     this.load.spritesheet("img_enemy1", "./assets/enemy1.png", {
       frameWidth: 128,
       frameHeight: 220
@@ -84,6 +84,10 @@ this.playerSpeed = 120;         // vitesse horizontale de base
       frameWidth: 32,
       frameHeight: 32
     });
+    this.load.spritesheet("img_enemy4", "./assets/enemy4.png", {
+      frameWidth: 135,
+      frameHeight: 204
+    });
 
     this.load.spritesheet("tesla", "./assets/tesla.png", {
       frameWidth: 160,
@@ -94,7 +98,7 @@ this.playerSpeed = 120;         // vitesse horizontale de base
     this.load.image("bullet_tesla", "./assets/bullet_tesla.png");
     this.load.image("tir_enemy", "./assets/tirenemy.png");
     this.load.image("tir_perso", "./assets/bullet_perso.png");
-
+    this.load.image("baballe", "./assets/baballe.png");
 
     this.load.image("img_potion", "./assets/fiole.png");
     this.load.image("img_gold", "./assets/engrenage.png");
@@ -156,10 +160,10 @@ this.load.image("boutonControles", "./assets/boutoncontroles.png");
       frameHeight: 60
     });
 
-
-
-
-
+this.load.spritesheet("pnj", "./assets/pnj.png", {
+      frameWidth: 64,
+      frameHeight: 96
+    });
 
     //SONS
     this.load.audio("musiqueMap1", "./assets/musique_sfx/musiquemap1.mp3");
@@ -190,6 +194,7 @@ WebFont.load({
             urls: ['./assets/TheCrowInlineShadowGrunge.css'] // optionnel si tu as un fichier css @font-face
         },
     });
+
 
     const centerX = this.cameras.main.width / 2;
   const centerY = this.cameras.main.height / 2;
@@ -802,6 +807,35 @@ this.anims.create({
 });
 
 
+  this.anims.create({
+    key: "enemy4_charge_droite",
+    frames: this.anims.generateFrameNumbers("img_enemy4", { start: 4, end: 6 }),
+    frameRate: 3,
+    repeat: 0
+  });
+
+  this.anims.create({
+    key: "enemy4_walk_droite",
+    frames: this.anims.generateFrameNumbers("img_enemy4", { start: 0, end: 3 }),
+    frameRate: 6,
+    repeat: -1
+  });
+
+  this.anims.create({
+    key: "enemy4_walk_gauche",
+    frames: this.anims.generateFrameNumbers("img_enemy4", { start: 10, end: 13 }),
+    frameRate: 3,
+    repeat: 0
+  });
+
+  this.anims.create({
+    key: "enemy4_charge_gauche",
+    frames: this.anims.generateFrameNumbers("img_enemy4", { start: 9, end: 7 }),
+    frameRate: 6,
+    repeat: -1
+  });
+
+
 
     // CLAVIER
     this.clavier = this.input.keyboard.createCursorKeys();
@@ -919,8 +953,8 @@ while (this.playerXP >= this.xpForNextLevel(this.playerLevel)) {
     this.enemy11 = new EnemyCone(this, 200, 2400, this.player, 50, 500, 30, 200);
     this.enemy12 = new EnemyBowling(this, 500, 2520, this.player, 20, 100, 30, 200);
     
-    this.enemy13 = new EnemyBowling(this, 2600, 1620, this.player, 20, 100, 30, 200);
-    this.enemy14 = new EnemyBowling(this, 600, 1620, this.player, 20, 100, 30, 200);
+    this.enemy13 = new EnemyBowling(this, 2600, 1500, this.player, 20, 100, 30, 200);
+    this.enemy14 = new EnemyBowling(this, 600, 1500, this.player, 20, 100, 30, 200);
 
 this.enemy15 = new EnemySpider(this, 70, 2520, this.player, 10, 5, 5, 200);
 this.enemy16 = new EnemySpider(this, 100, 1600, this.player, 10, 5, 5, 200);
@@ -1374,6 +1408,66 @@ this.input.keyboard.on("keydown-P", () => {
     this.updateWeaponModes();
 
 
+    // === Ajout du PNJ Trade ===
+    this.npcTrade = this.physics.add.sprite(96, 2310, "pnj");
+    this.npcTrade.setImmovable(true);
+    this.npcTrade.setDepth(10);
+    this.npcTrade.setScale(0.7);
+    this.physics.add.collider(this.npcTrade, this.platformLayer);
+
+    // UI trade cachée par défaut
+    this.tradeUI = this.add.image(this.npcTrade.x + 100, this.npcTrade.y - 2, "trade")
+      .setOrigin(0.5, 1)
+      .setVisible(false)
+      .setDepth(100);
+
+    this.isNearTradeNPC = false;
+    this.isTradeUIVisible = false;
+    this.tradeStep = 0;
+
+    // Détection de proximité avec le PNJ
+    this.physics.add.overlap(this.player, this.npcTrade, () => {
+      this.isNearTradeNPC = true;
+      if (!this.isTradeUIVisible) {
+        this.tradeUI.setVisible(true);
+        this.isTradeUIVisible = true;
+        this.tradeStep = 1;
+      }
+    }, null, this);
+
+    // Si le joueur s'éloigne, cacher l'UI
+    this.events.on('update', () => {
+      if (this.isNearTradeNPC && Phaser.Math.Distance.Between(this.player.x, this.player.y, this.npcTrade.x, this.npcTrade.y) > 60) {
+        this.isNearTradeNPC = false;
+        this.tradeUI.setVisible(false);
+        this.isTradeUIVisible = false;
+        this.tradeStep = 0;
+      }
+    });
+
+    // Gestion de la touche 'i' pour le trade
+    this.input.keyboard.on('keydown-I', () => {
+      if (this.isNearTradeNPC) {
+        if (this.tradeStep === 1) {
+          // Première pression : affiche trade.png
+          this.tradeUI.setVisible(true);
+          this.isTradeUIVisible = true;
+          this.tradeStep = 2;
+        } else if (this.tradeStep === 2) {
+          // Deuxième pression : effectue le trade
+          if (this.playerGold >= 5) {
+            this.playerGold -= 5;
+            this.updateGoldHUD(this.playerGold);
+            this.gainXP(2);
+            this.skill.play();
+            // Feedback visuel ou sonore possible ici
+          } else {
+            // Optionnel: feedback si pas assez d'or
+          }
+          this.tradeStep = 1;
+        }
+      }
+    });
 
 
 map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12, tileset13], 0, 0);
