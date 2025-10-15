@@ -28,7 +28,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
 
     // collisions projectiles ↔ plateformes
-    scene.physics.add.collider(this.projectiles, scene.groupe_plateformes, proj => proj.destroy());
+    scene.physics.add.collider(this.projectiles, scene.platformLayer, proj => proj.destroy());
 
     // collisions projectiles ↔ joueur
     if (this.target) {

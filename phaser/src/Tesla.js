@@ -30,10 +30,29 @@ export default class Tesla extends Phaser.GameObjects.Sprite {
         this.play('tesla_idle');
 
         this.lastShotTime = 0;
-        this.shootCooldown = 1000; // 1s entre chaque tir
+        this.shootCooldown = 1000; 
 
         // Collider avec le joueur pour tirer
         scene.physics.add.overlap(this, player, this.tryShoot, null, this);
+
+        // --- Ajout extinction/rallumage aléatoire de la Tesla ---
+        this.isOn = true;
+        this.scene.time.addEvent({
+            delay: 2000,
+            loop: true,
+            callback: () => {
+                // 40% de chance d'éteindre la Tesla
+                if (this.isOn && Math.random() < 0.4) {
+                    this.turnOff();
+                    this.isOn = false;
+                    // Rallume après un temps aléatoire (1 à 2.5s)
+                    this.scene.time.delayedCall(1000 + Math.random() * 1500, () => {
+                        this.play('tesla_idle');
+                        this.isOn = true;
+                    });
+                }
+            }
+        });
     }
 
     tryShoot(tesla, player) {
@@ -60,14 +79,10 @@ export default class Tesla extends Phaser.GameObjects.Sprite {
         // Détruire le bolt après un court instant
         this.scene.time.delayedCall(150, () => bolt.destroy());
 
-        // Infliger 10 points de dégâts via perdreVie()
+        // Infliger 5 points de dégâts via perdreVie()
         if (player.perdreVie) {
-            for (let i = 0; i < 10; i++) player.perdreVie();
+            player.perdreVie(5);
         }
-
-        // Flash / effet visuel
-        this.setTint(0x00ffff);
-        this.scene.time.delayedCall(100, () => this.clearTint());
     }
 
     turnOff() {

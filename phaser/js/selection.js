@@ -13,8 +13,8 @@ export default class selection extends Phaser.Scene {
 
     this.degatPlayerCorpsAcorps = 2;
 
-    this.baseXP = 10;
-    this.growth = 1.2;
+    this.baseXP = 5;
+    this.growth = 1.1;
     this.playerLevel = 0;
     this.playerXP = 0;
 
@@ -121,6 +121,8 @@ this.playerSpeed = 120;         // vitesse horizontale de base
   this.load.image("tiles10", "./src/map/sol_meca.png");
   this.load.image("tiles11", "./src/map/sol_mine.png");
   this.load.image("tiles12", "./src/map/tileset_meca.png");
+  this.load.image("tiles13", "./src/map/tileset_mine.png");
+
 
 
 
@@ -228,21 +230,22 @@ this.mdr = this.sound.add("mdr", { volume: 0.1, loop: false });
   const tileset10 = map.addTilesetImage("sol_meca", "tiles10");
   const tileset11 = map.addTilesetImage("82c71d7a-b3ba-4494-b2d4-4e3449d95bdd", "tiles11");
   const tileset12 = map.addTilesetImage("tileset_meca", "tiles12");
+  const tileset13 = map.addTilesetImage("tileset_mine", "tiles13");
   
     
     // Créer les calques
-    map.createLayer("background_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12], 0, 0);
-    map.createLayer("background_2_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12], 0, 0);
+    map.createLayer("background_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12, tileset13], 0, 0);
+    map.createLayer("background_2_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12, tileset13], 0, 0);
     this.platformLayer = map.createLayer(
   "platform_layer",
-  [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12],
+  [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12, tileset13],
   0,
   0
 );
 this.platformLayer.setCollisionByProperty({ dur: true });
-map.createLayer("ladder_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12], 0, 0);
-    map.createLayer("decoration_back_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12], 0, 0);
-    
+map.createLayer("ladder_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12, tileset13], 0, 0);
+    map.createLayer("decoration_back_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12, tileset13], 0, 0);
+
     // Activer collisions sur tuiles ayant la propriété { dur: true }
     this.platformLayer.setCollisionByProperty({ dur: true });
 
@@ -254,7 +257,7 @@ this.player.setCollideWorldBounds(false);
 this.player.hasWeapon = false;
 
 // Créer un mur invisible à gauche et droite
-const leftWall = this.add.rectangle(0, map.heightInPixels / 2, -2, map.heightInPixels);
+const leftWall = this.add.rectangle(0, map.heightInPixels / 2, -2, 8000);
 this.physics.add.existing(leftWall, true); // true = statique
 this.physics.add.collider(this.player, leftWall);
 
@@ -901,29 +904,40 @@ while (this.playerXP >= this.xpForNextLevel(this.playerLevel)) {
     this.invulnerable = false;
 
     // ENNEMIS
-    this.enemy0 = new EnemyParabolic(this, 1500, 500, this.player, 2, 1, 1, 200);
-    this.enemy1 = new EnemyParabolic(this, 1700, 500, this.player, 2, 1, 1, 200);
-    this.enemy2 = new EnemyParabolic(this, 1900, 500, this.player, 2, 1, 1, 200);
-    this.enemy3 = new EnemySpider(this, 3050, 400, this.player, 10, 5, 5, 200);
-    this.enemy4 = new EnemyParabolic(this, 2800, 500, this.player, 2, 1, 1, 200);
+    this.enemy0 = new EnemyParabolic(this, 1500, 500, this.player, 3, 1, 1, 200);
+    this.enemy1 = new EnemyParabolic(this, 1700, 500, this.player, 3, 1, 1, 200);
+    this.enemy2 = new EnemyParabolic(this, 1900, 500, this.player, 3, 1, 1, 200);
+    this.enemy3 = new EnemySpider(this, 3030, 400, this.player, 10, 5, 5, 200);
+    this.enemy4 = new EnemyParabolic(this, 2800, 500, this.player, 3, 1, 1, 200);
     this.enemy5 = new EnemySpider(this, 1800, 400, this.player, 10, 5, 5, 200);
     this.enemy6 = new EnemyParabolic(this, 2500, 400, this.player, 10, 5, 5, 200);
-    this.enemy7 = new EnemyParabolic(this, 2200, 500, this.player, 2, 1, 1, 200);
-    this.enemy8 = new EnemyParabolic(this, 3050, 400, this.player, 10, 5, 5, 200);
-    this.enemy9 = new EnemyParabolic(this, 2700, 400, this.player, 10, 5, 5, 200);
+    this.enemy7 = new EnemyParabolic(this, 2200, 500, this.player, 3, 1, 1, 200);
+    this.enemy8 = new EnemyParabolic(this, 3050, 400, this.player, 3, 1, 1, 200);
+    this.enemy9 = new EnemyParabolic(this, 2700, 400, this.player, 3, 1, 1, 200);
 
-    this.enemy10 = new EnemyCone(this, 1000, 4000, this.player, 50, 5, 10, 200);
-    this.enemy11 = new EnemyCone(this, 2000, 4100, this.player, 50, 5, 10, 200);
-    this.enemy12 = new EnemyBowling(this, 500, 2200, this.player, 20, 1000, 1000, 1200);
+    this.enemy10 = new EnemyCone(this, 600, 1500, this.player, 50, 500, 30, 200);
+    this.enemy11 = new EnemyCone(this, 200, 2400, this.player, 50, 500, 30, 200);
+    this.enemy12 = new EnemyBowling(this, 500, 2520, this.player, 20, 100, 30, 200);
+    
+    this.enemy13 = new EnemyBowling(this, 2600, 1620, this.player, 20, 100, 30, 200);
+    this.enemy14 = new EnemyBowling(this, 600, 1620, this.player, 20, 100, 30, 200);
+
+this.enemy15 = new EnemySpider(this, 70, 2520, this.player, 10, 5, 5, 200);
+this.enemy16 = new EnemySpider(this, 300, 1600, this.player, 10, 5, 5, 200);
+this.enemy17 = new EnemySpider(this, 600, 2520, this.player, 10, 5, 5, 200);
+this.enemy18 = new EnemySpider(this, 1200, 1600, this.player, 10, 5, 5, 200);
+this.enemy19 = new EnemySpider(this, 400, 2520, this.player, 10, 5, 5, 200);
+this.enemy20 = new EnemySpider(this, 2100, 1600, this.player, 10, 5, 5, 200);
+this.enemy21 = new EnemySpider(this, 1700, 1600, this.player, 10, 5, 5, 200);
+this.enemy22 = new EnemySpider(this, 2600, 1600, this.player, 10, 5, 5, 200);
 
 
 
-    this.tesla1 = new Tesla(this, 600, 1200, this.player);
+
+    this.tesla1 = new Tesla(this, 2000, 1200, this.player);
     this.add.existing(this.tesla1);
 
-    // Ajouter collision entre le joueur et la Tesla (facultatif si tu veux bloquer le joueur)
-    this.physics.add.collider(this.player, this.tesla1);
-    //this.physics.add.collider(this.tesla1, this.platformLayer);
+  this.physics.add.collider(this.tesla1, this.platformLayer);
 
 this.physics.add.collider(this.enemy0, this.platformLayer);
 this.physics.add.collider(this.enemy1, this.platformLayer);
@@ -939,6 +953,17 @@ this.physics.add.collider(this.enemy10, this.platformLayer);
 this.physics.add.collider(this.enemy11, this.platformLayer);
 this.physics.add.collider(this.enemy12, this.platformLayer);
 
+this.physics.add.collider(this.enemy13, this.platformLayer);
+this.physics.add.collider(this.enemy14, this.platformLayer);
+
+this.physics.add.collider(this.enemy15, this.platformLayer);
+this.physics.add.collider(this.enemy16, this.platformLayer);
+this.physics.add.collider(this.enemy17, this.platformLayer);
+this.physics.add.collider(this.enemy18, this.platformLayer);
+this.physics.add.collider(this.enemy19, this.platformLayer);
+this.physics.add.collider(this.enemy20, this.platformLayer);
+this.physics.add.collider(this.enemy21, this.platformLayer);
+this.physics.add.collider(this.enemy22, this.platformLayer);
 
 
     // Déplacements aléatoires entre deux bornes X
@@ -952,16 +977,20 @@ this.physics.add.collider(this.enemy12, this.platformLayer);
     if (this.enemy8.startPatrol) this.enemy8.startPatrol(2750, 3300, 70);
     if (this.enemy9.startPatrol) this.enemy9.startPatrol(2500, 2900, 70);
 
-    if (this.enemy10.startPatrolDiagonal) this.enemy10.startPatrolDiagonal(800, 1200, 40, 1900, 2200, 20);
-    if (this.enemy11.startPatrolDiagonal) this.enemy11.startPatrolDiagonal(1600, 2500, 60, 1900, 2200, 40);
+    if (this.enemy10.startPatrolDiagonal) this.enemy10.startPatrolDiagonal(500, 1200, 40, 1900, 2200, 20);
+    if (this.enemy11.startPatrolDiagonal) this.enemy11.startPatrolDiagonal(200, 700, 60, 1900, 2400, 40);
     if (this.enemy12.startPatrol) this.enemy12.startPatrol(200, 1000, 70);
+
+    if (this.enemy13.startPatrol) this.enemy13.startPatrol(900, 2400, 70);
+    if (this.enemy14.startPatrol) this.enemy14.startPatrol(200, 1000, 70);
+
 
 
   
   
     // Créer un groupe avec les ennemis existants
 this.enemies = this.physics.add.group();
-[this.enemy0, this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11, this.enemy12].forEach(e => {
+[this.enemy0, this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11, this.enemy12, this.enemy13, this.enemy14, this.enemy15, this.enemy16, this.enemy17, this.enemy18, this.enemy19, this.enemy20, this.enemy21, this.enemy22].forEach(e => {
   if (e) this.enemies.add(e);
 });
 
@@ -1049,13 +1078,13 @@ this.physics.add.existing(this.teleportB, true);
 // --- Nouveau téléporteur ---
 this.teleportC = this.add.rectangle(2630, 1600, 100, 50);
 this.physics.add.existing(this.teleportC, true);
-this.teleportD = this.add.rectangle(30, 2010, 50, 50);
+this.teleportD = this.add.rectangle(30, 2330, 50, 50);
 this.physics.add.existing(this.teleportD, true); 
 
 // --- Téléporteur supplémentaire ---
 this.teleportE = this.add.rectangle(1000, 1600, 50, 80);
 this.physics.add.existing(this.teleportE, true);
-this.teleportF = this.add.rectangle(1370, 2240, 50, 50);
+this.teleportF = this.add.rectangle(1370, 2560, 50, 50);
 this.physics.add.existing(this.teleportF, true);
 
 // Pour debug → affiche en rouge (tu peux commenter après)
@@ -1092,7 +1121,46 @@ this.physics.add.overlap(this.player, this.teleportC, () => {
 // Overlap avec D
 this.physics.add.overlap(this.player, this.teleportD, () => {
   this.currentTeleportZoneCD = "D";
+  // Descente de la caméra quand le joueur entre dans la zone de teleportD
+  if (!this._cameraLowered) {
+    this.cameras.main.stopFollow();
+    this.cameras.main.pan(this.player.x, 2450, 800, 'Sine.easeInOut');
+    this._cameraLowered = true;
+  }
 }, null, this);
+
+// Zone de trigger étendue autour de teleportD pour reset caméra
+
+if (!this.cameraResetZoneD) {
+  // Crée une zone plus grande autour de teleportD (par exemple 300x120)
+  this.cameraResetZoneD = this.add.rectangle(this.teleportD.x, this.teleportD.y, 500, 300);
+  this.physics.add.existing(this.cameraResetZoneD, true);
+}
+
+// Pan caméra quand le joueur entre dans cameraResetZoneD
+this.physics.add.overlap(this.player, this.cameraResetZoneD, () => {
+  if (!this._cameraLowered) {
+    this.cameras.main.stopFollow();
+    this.cameras.main.pan(this.player.x, 2450, 800, 'Sine.easeInOut');
+    this._cameraLowered = true;
+  }
+}, null, this);
+
+this.events.on("update", () => {
+  // Si le joueur n'est plus dans la zone de trigger, on remet la caméra à la normale
+    if (this._cameraLowered && !this.physics.overlap(this.player, this.cameraResetZoneD)) {
+      // Pan caméra vers la position normale avec ease-in
+      this.cameras.main.pan(this.player.x, this.player.y, 800, 'Sine.easeIn');
+      this.time.delayedCall(800, () => {
+        this.cameras.main.startFollow(this.player);
+        this.cameras.main.setFollowOffset(0, 210);
+        this.cameras.main.setBounds(0, 0, this.make.tilemap({ key: "map1" }).widthInPixels, this.make.tilemap({ key: "map1" }).heightInPixels);
+        this._cameraLowered = false;
+      });
+    }
+});
+
+
 
 // Overlap avec E
 this.physics.add.overlap(this.player, this.teleportE, () => {
@@ -1117,6 +1185,13 @@ this.events.on("update", () => {
     !this.physics.overlap(this.player, this.teleportD)
   ) {
     this.currentTeleportZoneCD = null;
+      // Si le joueur sort de cameraResetZoneD, remettre la caméra au normal
+      if (this._cameraLowered && !this.physics.overlap(this.player, this.cameraResetZoneD)) {
+        this.cameras.main.startFollow(this.player);
+        this.cameras.main.setFollowOffset(0, 210);
+        this.cameras.main.setBounds(0, 0, this.make.tilemap({ key: "map1" }).widthInPixels, this.make.tilemap({ key: "map1" }).heightInPixels);
+        this._cameraLowered = false;
+      }
   }
 
   if (
@@ -1125,7 +1200,29 @@ this.events.on("update", () => {
   ) {
     this.currentTeleportZoneEF = null;
   }
+
 });
+
+// boss test
+this.bossTrigger = this.add.rectangle(10, 700, 60, 60);
+this.physics.add.existing(this.bossTrigger, true);
+
+this.bossTrigger.setFillStyle?.(0xff8800, 0.4);
+
+this.physics.add.overlap(this.player, this.bossTrigger, () => {
+  if (!this._bossStarted) {
+    this._bossStarted = true;
+    let hud = document.getElementById("hud-level");
+    if (hud) hud.style.display = "none";
+    let hud1 = document.getElementById("hud-points");
+    if (hud1) hud1.style.display = "none";
+    let hud2 = document.getElementById("hud-gold");
+    if (hud2) hud2.style.display = "none";
+    this.scene.start('boss');
+    
+  }
+}, null, this);
+
 
 // MUSIQUE : préparation des musiques
 this.musiqueMap1 = this.sound.add('musiqueMap1', { volume: 0.5, loop: true });
@@ -1248,7 +1345,7 @@ this.input.keyboard.on("keydown-P", () => {
 
 
 
-map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12], 0, 0);
+map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset4, tileset5, tileset6, tileset7, tileset8, tileset9, tileset10, tileset11, tileset12, tileset13], 0, 0);
 
     this.activeButtons = this.menuButtons || [];
 
@@ -1526,11 +1623,11 @@ this.player.hasWeapon = false;
 
   // --- PET ---
 
-  if (this.skills["Survie"] >= 1 && !this.pet) {
+  if (this.skills["Survie"] >= 3 && !this.pet) {
   this.spawnPet();
 }
 
-  if (this.skills["Survie"] >= 1 && this.pet) {
+  if (this.skills["Survie"] >= 3 && this.pet) {
   const speed = 120;
   const detectionRadius = this.detectionRadius;
 
@@ -1765,9 +1862,9 @@ perdreVie(damage = 1) {
     if (this.petShootEvent) this.petShootEvent.remove(false);
     this.physics.pause();
     // Désactiver entités et nettoyer projectiles
-    [this.enemy0, this.enemy1, this.enemy2, this.enemy4, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11, this.enemy12].forEach(e => { if (e) e.setActive(false).setVisible(false); });
+    [this.enemy0, this.enemy1, this.enemy2, this.enemy4, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11, this.enemy12, this.enemy13, this.enemy14, this.enemy15, this.enemy16, this.enemy17, this.enemy18, this.enemy19, this.enemy20, this.enemy21, this.enemy22].forEach(e => { if (e) e.setActive(false).setVisible(false); });
     if (this.projectiles) this.projectiles.clear(true, true);
-    [this.enemy0, this.enemy1, this.enemy2, this.enemy4, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11, this.enemy12].forEach(e => { if (e?.projectiles) e.projectiles.clear(true, true); });
+    [this.enemy0, this.enemy1, this.enemy2, this.enemy4, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11, this.enemy12, this.enemy13, this.enemy14, this.enemy15, this.enemy16, this.enemy17, this.enemy18, this.enemy19, this.enemy20, this.enemy21, this.enemy22].forEach(e => { if (e?.projectiles) e.projectiles.clear(true, true); });
     if (this.player) this.player.setTint(0xff0000);
 
     // Création de l'écran de mort personnalisé
@@ -1897,7 +1994,7 @@ this.petShootEvent = this.time.addEvent({
     // Chercher le plus proche ennemi actif
     let target = null;
     let minDist = 1000;
-    [this.enemy0, this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11, this.enemy12].forEach(enemy => {
+    [this.enemy0, this.enemy1, this.enemy2, this.enemy3, this.enemy4, this.enemy5, this.enemy6, this.enemy7, this.enemy8, this.enemy9, this.enemy10, this.enemy11, this.enemy12, this.enemy13, this.enemy14, this.enemy15, this.enemy16, this.enemy17, this.enemy18, this.enemy19, this.enemy20, this.enemy21, this.enemy22 ].forEach(enemy => {
       if (enemy && enemy.active) {
         const dx = enemy.x - this.pet.x;
         const dy = enemy.y - this.pet.y;
@@ -2552,8 +2649,8 @@ updateWeaponModes() {
   this.playerHealth = 50;
   this.playerMaxHealth = 50;
   this.degatPlayerCorpsAcorps = 2;
-  this.baseXP = 10;
-  this.growth = 1.2;
+  this.baseXP = 5;
+  this.growth = 1.1;
   this.playerLevel = 0;
   this.playerXP = 0;
   this.gunFireRate = 500;
@@ -2677,28 +2774,31 @@ applySurvieStats() {
 
     // --- NIVEAUX ---
     if (lvl >= 1 && !this.pet) {
-        this.spawnPet(); // lvl 1 → spawn pet
-        this.scheduleOwlSound();
+      
+        this.playerMaxHealth = 100; 
+        this.playerHealth = this.playerMaxHealth;
+        this.updatePlayerHealthBar();
+        
     }
 
     if (lvl >= 2) {
-        this.playerMaxHealth = 100; // lvl 2 → +HP
-        this.playerHealth = this.playerMaxHealth;
-        this.updatePlayerHealthBar();
+      this.detectionRadius = 400;
+        
     }
 
     if (lvl >= 3) {
-        this.detectionRadius = 400; // lvl 3 → plus de range pour le pet
+        this.spawnPet(); 
+        this.scheduleOwlSound();
     }
 
     if (lvl >= 4) {
-        this.playerMaxHealth = 200; // lvl 4 → HP max plus haut
+        this.playerMaxHealth = 200;
         this.playerHealth = this.playerMaxHealth;
         this.updatePlayerHealthBar();
     }
 
     if (lvl >= 5) {
-        this.petDamage = 5; // lvl 5 → dégâts du pet
+        this.petDamage = 5; 
     }
 
 }
@@ -2717,23 +2817,23 @@ applyMobiliteStats() {
 
     // --- NIVEAUX ---
     if (lvl >= 1) {
-        this.hasDash = true;       // lvl 1 → débloque le dash
+        this.hasDash = true; 
     }
 
     if (lvl >= 2) {
-        this.playerSpeed = 180;    // lvl 2 → + vitesse
+        this.playerSpeed = 180;
     }
 
     if (lvl >= 3) {
-        this.playerJump = 220;     // lvl 3 → + saut
+        this.playerJump = 220; 
     }
 
     if (lvl >= 4) {
-        this.hasJetpack = true;    // lvl 4 → débloque le jetpack
+        this.hasJetpack = true; 
     }
 
     if (lvl >= 5) {
-        this.dashManaCost = 1;     // lvl 5 → dash & jetpack coûtent moins
+        this.dashManaCost = 1;
         this.jetpackManaCost = 2;
     }
     this.updateWeaponModes();

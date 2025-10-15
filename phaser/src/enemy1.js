@@ -4,7 +4,7 @@ export default class EnemyParabolic extends Enemy {
   
   
   constructor(scene, x, y, target) {
-  super(scene, x, y, "img_enemy1", 3, target, 2, 1, 1);
+  super(scene, x, y, "img_enemy1", 3, target, 3, 1, 1);
   this.setScale(0.7); 
 
     // flags / stockage état
@@ -171,6 +171,13 @@ export default class EnemyParabolic extends Enemy {
 
           bullet.setVelocity(vx, vy);
           bullet.body.allowGravity = true;
+
+          // Destroy bullet on collision with platformLayer
+          if (this.scene.platformLayer) {
+            this.scene.physics.add.collider(bullet, this.scene.platformLayer, () => {
+              bullet.destroy();
+            });
+          }
 
           this.isAttackingAnim = false; // unlock after anim
         });
