@@ -1087,6 +1087,11 @@ this.physics.add.existing(this.teleportE, true);
 this.teleportF = this.add.rectangle(1370, 2560, 50, 50);
 this.physics.add.existing(this.teleportF, true);
 
+this.teleportG = this.add.rectangle(3008, 1536, 50, 100);
+this.physics.add.existing(this.teleportG, true);
+this.teleportH = this.add.rectangle(192, 3808, 50, 100);
+this.physics.add.existing(this.teleportH, true);
+
 // Pour debug → affiche en rouge (tu peux commenter après)
 this.teleportA.setFillStyle?.(0xff0000, 0.3);
 this.teleportB.setFillStyle?.(0x0000ff, 0.3);
@@ -1097,12 +1102,17 @@ this.teleportD.setFillStyle?.(0xffff00, 0.3);
 this.teleportE.setFillStyle?.(0x00ffff, 0.3);
 this.teleportF.setFillStyle?.(0xff00ff, 0.3);
 
+this.teleportG.setFillStyle?.(0x00ffff, 0.3);
+this.teleportH.setFillStyle?.(0xff00ff, 0.3);
+
 // Flag pour savoir si le joueur est dedans
 this.currentTeleportZone = null;
 
 this.currentTeleportZoneCD = null;
 
 this.currentTeleportZoneEF = null;
+
+this.currentTeleportZoneGH = null;
 
 // Overlap avec A
 this.physics.add.overlap(this.player, this.teleportA, () => {
@@ -1172,6 +1182,13 @@ this.physics.add.overlap(this.player, this.teleportF, () => {
   this.currentTeleportZoneEF = "F";
 }, null, this);
 
+this.physics.add.overlap(this.player, this.teleportG, () => {
+  this.currentTeleportZoneGH = "G";
+}, null, this);
+this.physics.add.overlap(this.player, this.teleportH, () => {
+  this.currentTeleportZoneGH = "H";
+}, null, this);
+
 // Vérif sortie : si plus de contact, reset
 this.events.on("update", () => {
     if (
@@ -1200,6 +1217,13 @@ this.events.on("update", () => {
     !this.physics.overlap(this.player, this.teleportF)
   ) {
     this.currentTeleportZoneEF = null;
+  }
+
+    if (
+    !this.physics.overlap(this.player, this.teleportG) &&
+    !this.physics.overlap(this.player, this.teleportH)
+  ) {
+    this.currentTeleportZoneGH = null;
   }
 
 });
@@ -1264,6 +1288,12 @@ this.keyI.on('down', () => {
       this.fadeOutAndTeleport(500, this.teleportF.x, this.teleportF.y);
     } else if (this.currentTeleportZoneEF === "F") {
       this.fadeOutAndTeleport(500, this.teleportE.x, this.teleportE.y);
+    }
+
+    if (this.currentTeleportZoneGH === "G") {
+      this.fadeOutAndTeleport(500, this.teleportH.x, this.teleportH.y);
+    } else if (this.currentTeleportZoneGH === "H") {
+      this.fadeOutAndTeleport(500, this.teleportG.x, this.teleportG.y);
     }
 });
 
