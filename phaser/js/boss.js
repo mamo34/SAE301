@@ -31,6 +31,8 @@ export default class boss extends Phaser.Scene {
     this.load.image('gameover', './assets/gameover.jpg');
     this.load.image('boutonrejouer', './assets/boutonrejouer.png');
     this.load.image('boutonmenu', './assets/boutonmenu.png');
+    this.load.image('start', './assets/start.png');
+
 
     this.load.image('note_I', './assets/a.png');
     this.load.image('note_O', './assets/b.png');
@@ -320,9 +322,9 @@ export default class boss extends Phaser.Scene {
         this.add.circle(this.lanePositions.I, 600, 50, 0xE99102).setStrokeStyle(4, 0xffffff);
         this.add.circle(this.lanePositions.O, 600, 50, 0x6DAE2C).setStrokeStyle(4, 0xffffff);
         this.add.circle(this.lanePositions.P, 600, 50, 0x35A0A0).setStrokeStyle(4, 0xffffff);
-        this.add.circle(this.lanePositions.K, 600, 50, 0xC42F24).setStrokeStyle(4, 0xffffff);
-        this.add.circle(this.lanePositions.L, 600, 50, 0xA714D5).setStrokeStyle(4, 0xffffff);
-        this.add.circle(this.lanePositions.M, 600, 50, 0xC6A723).setStrokeStyle(4, 0xffffff);
+        this.add.circle(this.lanePositions.K, 600, 50, 0xC6A723).setStrokeStyle(4, 0xffffff);
+        this.add.circle(this.lanePositions.L, 600, 50, 0xC42F24).setStrokeStyle(4, 0xffffff);
+        this.add.circle(this.lanePositions.M, 600, 50, 0xA714D5).setStrokeStyle(4, 0xffffff);
         // Player sprite
     // Create player sprite as an animated sprite
     this.player = this.add.sprite(140, 600, 'player', 0).setScale(2.2);
@@ -348,16 +350,13 @@ export default class boss extends Phaser.Scene {
 
         // Overlay semi-transparent et image d'explication
         this.overlay = this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.7).setDepth(10);
-        this.infoImage = this.add.rectangle(640, 670, 600, 90, 0xffffff, 0.9).setDepth(11);
-        this.infoText = this.add.text(640, 670, 'Appuie sur I pour commencer !\nAppuie sur la touche indiquée quand la note arrive dans le cercle.', {
-            fontSize: '28px', color: '#222', align: 'center'
-        }).setOrigin(0.5).setDepth(12);
+       
+        this.infoText = this.add.image(640, 360, 'start').setOrigin(0.5).setDepth(12).setScale(1.2);
 
         this.gameStarted = false;
         this.input.keyboard.on('keydown', (event) => {
             if (!this.gameStarted && event.code === 'KeyI') {
                 this.overlay.destroy();
-                this.infoImage.destroy();
                 this.infoText.destroy();
                 this.startGame();
             }
@@ -630,7 +629,6 @@ export default class boss extends Phaser.Scene {
         if (this.playerBar) this.playerBar.setVisible(false);
         if (this.feedbackText) this.feedbackText.setVisible(false);
         if (this.overlay) this.overlay.setVisible(false);
-        if (this.infoImage) this.infoImage.setVisible(false);
         if (this.infoText) this.infoText.setVisible(false);
         if (this.deathScreen) this.deathScreen.setVisible(false);
         // Hide all notes

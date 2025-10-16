@@ -4,7 +4,8 @@ export default class EnemySpider extends Enemy {
   constructor(scene, x, y, target) {
     super(scene, x, y, "img_enemy3", 1, target, 5, 3, 5);
 
-    this.jumpDelay = 4000; // délai entre chaque saut (ms)
+  this.minJumpDelay = 2000; // délai min entre chaque saut (ms)
+  this.maxJumpDelay = 5000; // délai max entre chaque saut (ms)
     this.maxJumpHeight = 120; // hauteur maximale du saut
     this.spiderState = "idle";
     this.isJumping = false;
@@ -23,7 +24,7 @@ export default class EnemySpider extends Enemy {
 
     this.anims.play("spider_idle_right");
     this.idleTimer = null;
-    this.startJumping();
+  this.startJumping();
   }
 
   getDirection() {
@@ -32,10 +33,12 @@ export default class EnemySpider extends Enemy {
   }
 
   startJumping() {
-    this.scene.time.addEvent({
-      delay: this.jumpDelay,
-      loop: true,
-      callback: () => this.prepareJump()
+    const randomDelay = Phaser.Math.Between(this.minJumpDelay, this.maxJumpDelay);
+    this.scene.time.delayedCall(randomDelay, () => {
+      this.prepareJump();
+      if (this.active) {
+        this.startJumping();
+      }
     });
   }
 
