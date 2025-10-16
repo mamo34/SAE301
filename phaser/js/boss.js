@@ -88,38 +88,43 @@ export default class boss extends Phaser.Scene {
         // Ligne de délimitation
         this.add.line(640, 600, 200, 0, 1080, 0, 0xffffff).setLineWidth(4);
 
-        // Positions des lanes pour I, O, P, K, L, M (alignés à droite)
+        // Décalage dynamique pour que la dernière touche soit visible et les lanes soient plus espacées
+        const totalLanes = 6;
+        const firstLaneX = 360; // position de la première touche (décalée un peu à droite)
+        const lastLaneX = 1160; // position max pour la dernière touche (décalée aussi)
+        const laneSpacing = (lastLaneX - firstLaneX) / (totalLanes - 1);
         this.lanePositions = {
-            I: 480,
-            O: 640,
-            P: 800,
-            K: 960,
-            L: 1120,
-            M: 1280
+            I: firstLaneX,
+            O: firstLaneX + laneSpacing,
+            P: firstLaneX + laneSpacing * 2,
+            K: firstLaneX + laneSpacing * 3,
+            L: firstLaneX + laneSpacing * 4,
+            M: firstLaneX + laneSpacing * 5
         };
 
     // Cercles pour chaque touche/lane
     this.add.circle(this.lanePositions.I, 600, 50, 0xE99102).setStrokeStyle(4, 0xffffff);
     this.add.circle(this.lanePositions.O, 600, 50, 0x6DAE2C).setStrokeStyle(4, 0xffffff);
     this.add.circle(this.lanePositions.P, 600, 50, 0x35A0A0).setStrokeStyle(4, 0xffffff);
-    this.add.circle(this.lanePositions.K, 600, 50, 0xE99102).setStrokeStyle(4, 0xffffff);
-    this.add.circle(this.lanePositions.L, 600, 50, 0x6DAE2C).setStrokeStyle(4, 0xffffff);
-    this.add.circle(this.lanePositions.M, 600, 50, 0x35A0A0).setStrokeStyle(4, 0xffffff);
+    this.add.circle(this.lanePositions.K, 600, 50, 0xC42F24).setStrokeStyle(4, 0xffffff);
+    this.add.circle(this.lanePositions.L, 600, 50, 0xA714D5).setStrokeStyle(4, 0xffffff);
+    this.add.circle(this.lanePositions.M, 600, 50, 0xC6A723).setStrokeStyle(4, 0xffffff);
 
         // Boss sprite
         this.boss = this.add.sprite(1000, 220, 'boss').setScale(2.2);
         // Player sprite
-        this.player = this.add.sprite(320, 600, 'player').setScale(2.2);
-        // Health bars
-        this.bossBar = this.add.rectangle(1000, 100, this.bossHealth * 3, 28, 0xff4444);
-        this.playerBar = this.add.rectangle(320, 500, this.playerHealth * 3, 28, 0x44ff44);
+    // Décale le joueur et sa barre de vie vers la gauche
+    this.player = this.add.sprite(140, 600, 'player').setScale(2.2);
+    // Health bars
+    this.bossBar = this.add.rectangle(1000, 100, this.bossHealth * 3, 28, 0xff4444);
+    this.playerBar = this.add.rectangle(140, 500, this.playerHealth * 3, 28, 0x44ff44);
         // Score text (désactivé)
         // this.scoreText = this.add.text(640, 60, 'Score: 0', { fontSize: '40px', color: '#fff' }).setOrigin(0.5);
 
         // Overlay semi-transparent et image d'explication
         this.overlay = this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.7).setDepth(10);
         this.infoImage = this.add.rectangle(640, 670, 600, 90, 0xffffff, 0.9).setDepth(11);
-        this.infoText = this.add.text(640, 670, 'Appuie sur I pour commencer !\nAppuie sur I, O, P quand la note arrive dans le cercle.', {
+        this.infoText = this.add.text(640, 670, 'Appuie sur I pour commencer !\nAppuie sur la touche indiquée quand la note arrive dans le cercle.', {
             fontSize: '28px', color: '#222', align: 'center'
         }).setOrigin(0.5).setDepth(12);
 
