@@ -35,24 +35,11 @@ export default class Tesla extends Phaser.GameObjects.Sprite {
         // Collider avec le joueur pour tirer
         scene.physics.add.overlap(this, player, this.tryShoot, null, this);
 
-        // --- Ajout extinction/rallumage aléatoire de la Tesla ---
+        // voilà la on fait la boucle allumée de la tesla jusqu'à ce qu'elle soit éteinte
         this.isOn = true;
-        this.scene.time.addEvent({
-            delay: 2000,
-            loop: true,
-            callback: () => {
-                // 40% de chance d'éteindre la Tesla
-                if (this.isOn && Math.random() < 0.4) {
-                    this.turnOff();
-                    this.isOn = false;
-                    // Rallume après un temps aléatoire (1 à 2.5s)
-                    this.scene.time.delayedCall(1000 + Math.random() * 1500, () => {
-                        this.play('tesla_idle');
-                        this.isOn = true;
-                    });
-                }
-            }
-        });
+        if (this.isOn && this.anims.currentAnim.key !== 'tesla_idle') {
+            this.play('tesla_idle');
+        }
     }
 
     tryShoot(tesla, player) {
@@ -87,5 +74,6 @@ export default class Tesla extends Phaser.GameObjects.Sprite {
 
     turnOff() {
         this.play('tesla_off');
+        this.isOn = false;
     }
 }

@@ -52,7 +52,7 @@ this.playerSpeed = 120;         // vitesse horizontale de base
   
 
   preload() {
-    const baseURL = this.sys.game.config.baseURL;
+  const baseURL = this.sys.game.config.baseURL;
     this.load.setBaseURL(baseURL);
 
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
@@ -99,6 +99,11 @@ this.playerSpeed = 120;         // vitesse horizontale de base
     this.load.image("tir_enemy", "./assets/tirenemy.png");
     this.load.image("tir_perso", "./assets/bullet_perso.png");
     this.load.image("baballe", "./assets/baballe.png");
+     this.load.spritesheet('levier', './assets/levier.png', { frameWidth: 64, frameHeight: 64 });
+  this.load.image('warning', './assets/warning.png');
+  this.load.image('ascenseur', './assets/ascenseur.png');
+  this.load.image('descente', './assets/descente.jpg');
+ 
 
     this.load.image("img_potion", "./assets/fiole.png");
     this.load.image("img_gold", "./assets/engrenage.png");
@@ -184,6 +189,7 @@ this.load.spritesheet("pnj", "./assets/pnj.png", {
 
     this.load.audio("select", "./assets/musique_sfx/select.mp3");
     this.load.audio("click", "./assets/musique_sfx/click.mp3");
+  this.load.audio('chaine', './assets/musique_sfx/chaine.mp3');
     
   }
 
@@ -867,7 +873,37 @@ this.input.keyboard.on('keydown-O', () => {
 
 
 
+  // --- LEVIER 2 ---
+    this.lever2Activated = false;
+    this.lever2Step = 0;
+    this.lever2 = this.add.sprite(900, 3920, 'levier', 0).setOrigin(0.5, 1);
+  this.physics.add.existing(this.lever2, true);
+  // Place warningUI image above lever2
+  this.warningUI = this.add.image(this.lever2.x, this.lever2.y - 80, 'warning').setOrigin(0.5, 1).setVisible(false).setDepth(100);
+    this.isNearLever2 = false;
+    this.physics.add.overlap(this.player, this.lever2, () => {
+      this.isNearLever2 = true;
+    }, null, this);
 
+    // --- Ascenseur plein écran (affiché après TP du 2e levier) ---
+    this.ascenseurImage = this.add.image(this.cameras.main.width/2, this.cameras.main.height/2, 'ascenseur')
+      .setOrigin(0.5, 0.5)
+      .setScrollFactor(0)
+      .setVisible(false)
+      .setDepth(100000);
+
+    // --- Ascenseur fond (descente) ---
+    const imgHeight = 2880;
+    const screenHeight = 720;
+    this.ascenseurFond = this.add.image(this.cameras.main.width/2, imgHeight/2, 'descente')
+      .setOrigin(0.5, 0.5)
+      .setScrollFactor(0)
+      .setDisplaySize(1280, imgHeight)
+      .setVisible(false)
+      .setDepth(99999);
+
+    // --- Timer pour lancer la scène boss après 15s de montée ---
+    this.bossSceneTimerStarted = false;
 
 
 
@@ -970,8 +1006,8 @@ this.enemy22 = new EnemySpider(this, 2600, 1600, this.player, 10, 5, 5, 200);
 
     this.tesla1 = new Tesla(this, 2000, 1200, this.player);
     this.add.existing(this.tesla1);
-
-  this.physics.add.collider(this.tesla1, this.platformLayer);
+    this.physics.add.collider(this.tesla1, this.platformLayer);
+    this.teslaPlayerCollider = this.physics.add.collider(this.tesla1, this.player);
 
 this.physics.add.collider(this.enemy0, this.platformLayer);
 this.physics.add.collider(this.enemy1, this.platformLayer);
@@ -1356,9 +1392,6 @@ this.physics.add.overlap(this.projectiles, this.enemies, (projectile, enemy) => 
 
 
 // modes d'attaque
-    // 🧭 Fonction pour mettre à jour la liste des armes débloquées
-// 🪙 Modes d'attaque (fixe à 3)
-// Initialisation des modes d'attaque
 this.weaponModes = ['melee'];
 if (this.skills.Armes >= 1) this.weaponModes.push('gun');
 if (this.skills.Mobilité >= 4) this.weaponModes.push('jetpack');
@@ -1401,7 +1434,28 @@ this.input.keyboard.on("keydown-P", () => {
 });
 
 
+// --- LEVIER ---
+    this.leverActivated = false;
+    this.lever = this.add.sprite(1120, 2605, 'levier', 0).setOrigin(0.5, 1);
+    this.physics.add.existing(this.lever, true); // statique
 
+    // Collider pour interaction
+    this.physics.add.overlap(this.player, this.lever, () => {
+      if (!this.leverActivated && this.input.keyboard.checkDown(this.keyI, 250)) {
+        this.leverActivated = true;
+        this.lever.setFrame(1); // allumé
+        this.click.play();
+        // Désactive la Tesla et sa hitbox
+        if (this.tesla1) {
+          this.tesla1.turnOff();
+          // Supprime l'overlap Tesla/joueur
+          if (this.teslaPlayerCollider) {
+            this.teslaPlayerCollider.destroy();
+            this.teslaPlayerCollider = null;
+          }
+        }
+      }
+    }, null, this);
 
 
     this.refreshWeaponUI();
@@ -1479,6 +1533,7 @@ map.createLayer("decoration_front_layer", [tileset1, tileset2, tileset3, tileset
   }
 
   update() {
+    
     // --- Gestion de la touche L (Pause / Reprise) ---
     if (Phaser.Input.Keyboard.JustDown(this.pauseKey)) {
         // Bloque L si une page interne est ouverte (Contrôles ou Skills)
@@ -1851,6 +1906,103 @@ if (!this.isWeaponUnlocked(this.selectedWeaponIndex)) {
 
 
 
+    // --- Gestion du levier 2 ---
+    if (this.isNearLever2 && !this.lever2Activated) {
+      if (this.input.keyboard.checkDown(this.keyI, 250)) {
+        if (this.lever2Step === 0) {
+          this.warningUI.setVisible(true);
+          this.lever2Step = 1;
+        } else if (this.lever2Step === 1) {
+          this.warningUI.setVisible(false);
+          this.lever2Activated = true;
+          this.lever2.setFrame(1);
+          this.click.play();
+          // Fade + TP sur plateforme
+          this.fadeOutAndTeleport(500, 2690, 4210);
+          // Cache le HUD stats, level et or
+          const hud = document.getElementById('hud-level');
+          if (hud) hud.style.display = 'none';
+          const hudPoints = document.getElementById('hud-points');
+          if (hudPoints) hudPoints.style.display = 'none';
+          const hudGold = document.getElementById('hud-gold');
+          if (hudGold) hudGold.style.display = 'none';
+          // Affiche les images ascenseur APRÈS le fade/TP
+          this.time.delayedCall(600, () => {
+            // Forcibly set position and visibility regardless of camera state
+            const imgHeight = 2880;
+            const screenHeight = 720;
+            this.ascenseurFond.setPosition(this.cameras.main.centerX, imgHeight / 2);
+            this.ascenseurFond.setVisible(true);
+            this.ascenseurImage.setPosition(this.cameras.main.centerX, this.cameras.main.centerY);
+            this.ascenseurImage.setVisible(true);
+            this.tweens.add({
+              targets: this.ascenseurFond,
+              y: screenHeight - imgHeight / 2,
+              duration: 14000,
+              ease: "Linear",
+              onComplete: () => {
+                if (this.ascenseurFond) this.ascenseurFond.setVisible(false);
+              }
+            });
+          });
+            // Son de chaîne
+            this.chaineSound = this.sound.add("chaine", { loop: true, volume: 0.6 });
+            this.chaineSound.play();
+            this.time.delayedCall(14000, () => {
+              if (this.chaineSound) this.chaineSound.stop();
+            });
+          // Timer boss direct
+          if (!this.bossSceneTimerStarted) {
+            this.bossSceneTimerStarted = true;
+            this.time.delayedCall(13200, () => {
+              this.cameras.main.fadeOut(500, 0, 0, 0);
+              this.cameras.main.once("camerafadeoutcomplete", () => {
+                this.scene.start("boss");
+              });
+            });
+          }
+        }
+      }
+    } else {
+      this.warningUI.setVisible(false);
+      this.lever2Step = 0;
+    }
+
+    // --- Gestion du levier sur la plateforme ---
+    if (this.isNearLeverOnPlatform && !this.leverOnPlatformActivated) {
+      if (this.input.keyboard.checkDown(this.keyI, 250)) {
+        this.leverOnPlatformActivated = true;
+        this.leverOnPlatform.setFrame(1);
+        this.click.play();
+        // Optionnel : feedback visuel ou effet
+      }
+    }
+
+    // --- Reset de proximité ---
+    if (this.isNearLever2 && Phaser.Math.Distance.Between(this.player.x, this.player.y, this.lever2.x, this.lever2.y) > 60) {
+      this.isNearLever2 = false;
+      this.warningUI.setVisible(false);
+      this.lever2Step = 0;
+    }
+    if (this.isNearLeverOnPlatform && Phaser.Math.Distance.Between(this.player.x, this.player.y, this.leverOnPlatform.x, this.leverOnPlatform.y) > 60) {
+      this.isNearLeverOnPlatform = false;
+    }
+
+
+
+    // --- Timer boss après plateforme ---
+    if (this.platformTweenStarted && !this.bossSceneTimerStarted) {
+      this.bossSceneTimerStarted = true;
+      this.time.delayedCall(14000, () => {
+        this.cameras.main.fadeOut(500, 0, 0, 0);
+        this.cameras.main.once("camerafadeoutcomplete", () => {
+          this.scene.start("boss");
+        });
+      });
+    }
+
+
+    
 
 
   }
