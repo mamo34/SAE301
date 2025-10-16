@@ -28,6 +28,10 @@ export default class boss extends Phaser.Scene {
     this.load.image('victoire', './assets/victoire.jpg');
     this.load.spritesheet('player', './assets/dudeattack.png', { frameWidth: 32, frameHeight: 64 });
 
+    this.load.image('gameover', './assets/gameover.jpg');
+    this.load.image('boutonrejouer', './assets/boutonrejouer.png');
+    this.load.image('boutonmenu', './assets/boutonmenu.png');
+
     this.load.image('note_I', './assets/a.png');
     this.load.image('note_O', './assets/b.png');
     this.load.image('note_P', './assets/c.png');
@@ -362,23 +366,20 @@ export default class boss extends Phaser.Scene {
 
     startGame() {
     // Changement de phase du boss
-    this.time.delayedCall(50500, () => {
+    this.time.delayedCall(50000, () => {
         this.bossBackground.setTexture('boss_mid');
         this.bossBackground.setDisplaySize(1280, 720);
         this.bossBackground.setDepth(-1);
         this.bossBackground.setVisible(true);
     });
-    this.time.delayedCall(74000, () => {
+    this.time.delayedCall(73500, () => {
         this.bossBackground.setTexture('boss_dead');
         this.bossBackground.setDisplaySize(1280, 720);
         this.bossBackground.setDepth(-1);
         this.bossBackground.setVisible(true);
         // Après 5 secondes, affiche victoire
         this.time.delayedCall(5000, () => {
-            this.bossBackground.setTexture('victoire');
-            this.bossBackground.setDisplaySize(1280, 720);
-            this.bossBackground.setDepth(-1);
-            this.bossBackground.setVisible(true);
+                this.showVictoryScreen();
             });
     });
     this.gameStarted = true;
@@ -541,7 +542,7 @@ export default class boss extends Phaser.Scene {
         if (this.bossHealth <= 0) {
             this.isGameOver = true;
             this.musicboss.stop();
-            this.add.text(640, 360, 'VICTOIRE !', { fontSize: '64px', color: '#ff0' }).setOrigin(0.5);
+                this.showVictoryScreen();
         } else if (this.playerHealth <= 0) {
             this.isGameOver = true;
             this.musicboss.stop();
@@ -621,6 +622,32 @@ export default class boss extends Phaser.Scene {
             this.deathScreenKeyI.destroy();
         };
         this.deathMenuActive = true;
+    }
+
+    showVictoryScreen() {
+        // Hide all main UI elements
+        if (this.player) this.player.setVisible(false);
+        if (this.playerBar) this.playerBar.setVisible(false);
+        if (this.feedbackText) this.feedbackText.setVisible(false);
+        if (this.overlay) this.overlay.setVisible(false);
+        if (this.infoImage) this.infoImage.setVisible(false);
+        if (this.infoText) this.infoText.setVisible(false);
+        if (this.deathScreen) this.deathScreen.setVisible(false);
+        // Hide all notes
+        if (this.notes) this.notes.forEach(note => note.setVisible(false));
+        // Show only victoire image and feedback counts
+        const cam = this.cameras.main;
+        const centerX = cam.scrollX + cam.width / 2;
+        const centerY = cam.scrollY + cam.height / 2;
+        this.victoireContainer = this.add.container(centerX, centerY).setDepth(999999);
+        const victoireImg = this.add.image(0, 0, 'victoire').setOrigin(0.5).setDisplaySize(1280, 720);
+        this.victoireContainer.add(victoireImg);
+        // Feedback counts
+        const feedbackString = `Parfait: ${this.feedbackCounts['Parfait']}\nBien: ${this.feedbackCounts['Bien']}\nRaté: ${this.feedbackCounts['Raté']}`;
+        const feedbackText = this.add.text(0, 265, feedbackString, {
+            fontSize: '48px', color: '#fff', align: 'center', fontStyle: 'bold', stroke: '#222', strokeThickness: 4
+        }).setOrigin(0.5);
+        this.victoireContainer.add(feedbackText);
     }
 
     cleanupDeathMenu() {
@@ -712,8 +739,7 @@ export default class boss extends Phaser.Scene {
                     // If player is still alive, show victory screen with lower music
                     if (!this.isGameOver && this.playerHealth > 0) {
                         this.isGameOver = true;
-                        this.add.text(640, 360, 'VICTOIRE !', { fontSize: '64px', color: '#ff0' }).setOrigin(0.5);
-                    }
+                        }
                 }
             });
         }

@@ -1286,11 +1286,6 @@ this.events.on("update", () => {
 
 });
 
-// boss test
-this.bossTrigger = this.add.rectangle(10, 700, 60, 60);
-this.physics.add.existing(this.bossTrigger, true);
-
-this.bossTrigger.setFillStyle?.(0xff8800, 0.4);
 
 this.physics.add.overlap(this.player, this.bossTrigger, () => {
   if (!this._bossStarted) {
