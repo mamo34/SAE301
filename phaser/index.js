@@ -23,7 +23,7 @@ var config = {
       gravity: {
         y: 300 // gravité verticale : acceleration ddes corps en pixels par seconde
       },
-      debug: true // afficher les hitbox et vecteurs
+      debug: false // afficher les hitbox et vecteurs
     }
   },
   scene: [debut, tutoriel, selection, boss],
